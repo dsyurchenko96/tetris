@@ -1,0 +1,105 @@
+CC = gcc
+CFLAGS = -Wall -Werror -Wextra -std=c11 -g
+LDFLAGS = -lncurses
+GCOV_FLAGS = -ftest-coverage -fprofile-arcs -fPIC
+
+BACKEND_DIR = brick_game/tetris
+TEST_DIR = tests
+BUILD_DIR = build
+
+SRC = $(wildcard $(BACKEND_DIR)/*.c)
+OBJ = $(SRC:$(BACKEND_DIR)/%.c=$(BUILD_DIR)/%.o)
+GCOV_OBJ = $(SRC:$(BACKEND_DIR)/%.c=$(BUILD_DIR)/%.gcno)
+GCOV_OBJ_O = $(SRC:$(BACKEND_DIR)/%.c=$(BUILD_DIR)/%.gcov.o)
+
+TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
+TEST_OBJ = $(patsubst $(TEST_DIR)/test%.c, $(BUILD_DIR)/test%.o, $(TEST_SRC))
+
+TARGET = tetris
+
+# CHECK FOR SYSTEM
+UNAME:=$(shell uname -s)
+ifeq ($(UNAME), Linux)
+ CFLAGS += -lsubunit
+ TEST_FLAGS = -pthread -lcheck -pthread -lrt -lm -lsubunit
+ OPENER = xdg-open
+else ifeq ($(UNAME), Darwin)
+#  CC = gcc-13
+ TEST_FLAGS = $(shell pkg-config --cflags --libs check)
+ OPENER = open
+endif
+
+all: $(TARGET).a
+
+$(TARGET).a: $(OBJ)
+	ar rcs $(TARGET).a $^
+	ranlib $(TARGET).a
+
+play: clean $(TARGET).a
+	$(CC) $(CFLAGS) -c main.c -o $(BUILD_DIR)/main.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/main.o $(TARGET).a -o $(BUILD_DIR)/$(TARGET)
+	./$(BUILD_DIR)/$(TARGET)
+
+# replay: clean play
+
+$(BUILD_DIR)/%.o: $(BACKEND_DIR)/%.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(BUILD_DIR)/%.gcov.o: $(BACKEND_DIR)/%.c
+	$(CC) -c $(CFLAGS) $(GCOV_FLAGS) -o $@ $<
+
+$(TEST_OBJ): $(BUILD_DIR)/%.o: $(TEST_DIR)/%.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+
+covered: $(GCOV_OBJ_O)
+	ar rcs $(TARGET).a $(GCOV_OBJ_O)
+	ranlib $(TARGET).a
+
+test.a: $(TEST_OBJ)
+	ar rcs $(BUILD_DIR)/test.a $^
+	ranlib $(BUILD_DIR)/test.a
+
+test_compile: clean covered test.a
+	$(CC) $(CFLAGS) $(GCOV_FLAGS) -c $(TEST_DIR)/test_suite.c -o $(BUILD_DIR)/test_suite.o
+	$(CC) $(CFLAGS) $(GCOV_FLAGS) $(LDFLAGS) $(BUILD_DIR)/test_suite.o $(BUILD_DIR)/test.a $(TARGET).a -o $(BUILD_DIR)/test $(TEST_FLAGS)
+
+test: test_compile
+	./$(BUILD_DIR)/test
+
+gcov_report: test
+	lcov -t "$(TARGET)" -o $(BUILD_DIR)/$(TARGET).info -c -d .
+# lcov -r $(BUILD_DIR)/$(TARGET).info "*math.h" -o $(BUILD_DIR)/$(TARGET).info
+	genhtml -o $(BUILD_DIR)/gcov_report $(BUILD_DIR)/$(TARGET).info
+	$(OPENER) ./$(BUILD_DIR)/gcov_report/index.html
+
+style:
+	clang-format -i -style=file:"../materials/linters/.clang-format" $(BACKEND_DIR)/*.c $(TEST_DIR)/*.c $(TEST_DIR)/*.h
+
+clean:
+	rm -rf $(BUILD_DIR)/* $(TARGET).a
+
+rebuild:
+	make clean
+	make all
+
+statictest:
+	cppcheck --enable=all --suppress=missingIncludeSystem .
+	make rebuild
+
+beforecommit:
+	make style
+	make statictest
+	make clean
+
+test_leaks: test_compile
+ifeq ($(UNAME), Linux)
+	valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(BUILD_DIR)/test
+else ifeq ($(UNAME), Darwin)
+	leaks --atExit -- ./$(BUILD_DIR)/test
+endif
+
+valgrind:
+	cd ../materials/build/Valgrind && bash run.sh
+
+.PHONY: all clean gcov_report style rebuild beforecommit test_leaks
