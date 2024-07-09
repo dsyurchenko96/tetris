@@ -85,7 +85,6 @@ rebuild:
 
 statictest:
 	cppcheck --enable=all --suppress=missingIncludeSystem .
-	make rebuild
 
 beforecommit:
 	make style

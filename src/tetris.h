@@ -17,6 +17,7 @@
 #define SPAWN_Y 4
 
 #define NUM_TETROMINOS 7
+#define NUM_BLOCKS 4
 
 typedef enum {
     Start,
@@ -46,6 +47,18 @@ typedef enum {
     Locked
 } FieldCellState;
 
+typedef enum {
+    NoCollision,
+    HorizontalCollision,
+    LockingCollision
+} CollisionState;
+
+typedef struct {
+    int indeces[4];
+    int num_cleared;
+    bool to_clear_current;
+} LineClearInfo;
+
 typedef struct {
     int **field;
     int **next;
@@ -54,6 +67,7 @@ typedef struct {
     int level;
     int speed;
     int pause;
+    int terminate;
 } GameInfo_t;
 
 typedef struct {
@@ -64,11 +78,13 @@ typedef struct {
 typedef struct {
     TetrominoType type;
     Coordinates coordinates[4][4];
+    bool locked;
     int x;
     int y;
     int color;
     int number_of_states;
     int state;
+    int previous_state;
 } Tetromino;
 
  static const Coordinates COORDINATES[NUM_TETROMINOS][4][4] = {

@@ -110,20 +110,49 @@ void processInput() {
 
 int checkCollision(Tetromino *tetromino, int x, int y) {
   GameInfo_t *GameState = getGameInfo();
-  int collision = 0;
-  for (int i = 0; collision == 0 && i < 4; i++) {
-    if (x + tetromino->coordinates[tetromino->state][i].x < 0 ||
-        x + tetromino->coordinates[tetromino->state][i].x >= FIELD_WIDTH ||
-        y + tetromino->coordinates[tetromino->state][i].y < 0 ||
-        y + tetromino->coordinates[tetromino->state][i].y >= FIELD_HEIGHT ||
-        GameState->field[y + tetromino->coordinates[tetromino->state][i].y]
-                        [x + tetromino->coordinates[tetromino->state][i].x] ==
-            Locked) {
-      collision = 1;
+  int collision = NoCollision;
+  bool rotating = (!x && !y);
+  for (int coordinate = 0; collision == NoCollision && coordinate < NUM_BLOCKS;
+       coordinate++) {
+    int next_x = tetromino->x + x +
+                 tetromino->coordinates[tetromino->state][coordinate].x;
+    int next_y = tetromino->y + y +
+                 tetromino->coordinates[tetromino->state][coordinate].y;
+
+    if (next_x < 0 || next_x >= FIELD_WIDTH || next_y < 0 ||
+        (rotating && (next_y >= FIELD_HEIGHT)) ||
+        (!y && GameState->field[next_y][next_x] == Locked)) {
+      collision = HorizontalCollision;
+
+    } else if ((y && next_y >= FIELD_HEIGHT) ||
+               (!x && y && GameState->field[next_y][next_x] == Locked)) {
+      collision = LockingCollision;
     }
   }
 
   return collision;
+}
+
+void clearTetromino(Tetromino *tetromino) {
+  GameInfo_t *GameState = getGameInfo();
+  for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
+    GameState->field[tetromino->y +
+                     tetromino->coordinates[tetromino->state][coordinate].y]
+                    [tetromino->x +
+                     tetromino->coordinates[tetromino->state][coordinate].x] =
+        Empty;
+  }
+}
+
+void lockTetromino(Tetromino *tetromino) {
+  GameInfo_t *GameState = getGameInfo();
+  for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
+    GameState->field[tetromino->y +
+                     tetromino->coordinates[tetromino->state][coordinate].y]
+                    [tetromino->x +
+                     tetromino->coordinates[tetromino->state][coordinate].x] =
+        Locked;
+  }
 }
 
 void initTetromino() {
@@ -133,11 +162,11 @@ void initTetromino() {
   tetromino->x = SPAWN_X;
   tetromino->y = SPAWN_Y;
   tetromino->color = 0;
+  tetromino->previous_state = 0;
   tetromino->state = 0;
 
-  // int index = (int)((double)random() / ((double)RAND_MAX + 1) *
-  // NUM_TETROMINOS); spawnTetromino(tetrominoArray[index]);
-  spawnTetromino(tetrominoArray[I]);
+  int index = (int)((double)random() / ((double)RAND_MAX + 1) * NUM_TETROMINOS);
+  spawnTetromino(tetrominoArray[index]);
 }
 
 void spawnTetromino(TetrominoType type) {
@@ -164,17 +193,12 @@ void spawnTetromino(TetrominoType type) {
 }
 
 void moveTetromino(Tetromino *tetromino, int x, int y) {
-  GameInfo_t *GameState = getGameInfo();
-  for (int i = 0; i < 4; i++) {
-    GameState
-        ->field[tetromino->y + tetromino->coordinates[tetromino->state][i].y]
-               [tetromino->x + tetromino->coordinates[tetromino->state][i].x] =
-        Empty;
-  }
+  clearTetromino(tetromino);
 
   tetromino->x += x;
   tetromino->y += y;
 
+  GameInfo_t *GameState = getGameInfo();
   for (int i = 0; i < 4; i++) {
     GameState
         ->field[tetromino->y + tetromino->coordinates[tetromino->state][i].y]
@@ -185,15 +209,17 @@ void moveTetromino(Tetromino *tetromino, int x, int y) {
 
 void rotateTetromino(Tetromino *tetromino) {
   // GameInfo_t *GameState = getGameInfo();
-  int old_state = tetromino->state;
+  tetromino->previous_state = tetromino->state;
   tetromino->state = (tetromino->state + 1) % tetromino->number_of_states;
-  if (checkCollision(tetromino, tetromino->x, tetromino->y)) {
-    tetromino->state = old_state;
+  if (checkCollision(tetromino, 0, 0) != NoCollision) {
+    tetromino->state = tetromino->previous_state;
   } else {
     GameInfo_t *GameState = getGameInfo();
     for (int i = 0; i < 4; i++) {
-      GameState->field[tetromino->y + tetromino->coordinates[old_state][i].y]
-                      [tetromino->x + tetromino->coordinates[old_state][i].x] =
+      GameState->field[tetromino->y +
+                       tetromino->coordinates[tetromino->previous_state][i].y]
+                      [tetromino->x +
+                       tetromino->coordinates[tetromino->previous_state][i].x] =
           Empty;
     }
 
@@ -206,27 +232,96 @@ void rotateTetromino(Tetromino *tetromino) {
   }
 }
 
+LineClearInfo initLineInfo(void) {
+  LineClearInfo lines;
+  lines.indeces[0] = 0;
+  lines.indeces[1] = 0;
+  lines.indeces[2] = 0;
+  lines.indeces[3] = 0;
+  lines.num_cleared = 0;
+  lines.to_clear_current = true;
+  return lines;
+}
+
+LineClearInfo checkLineClear(void) {
+  GameInfo_t *GameState = getGameInfo();
+  LineClearInfo lines = initLineInfo();
+  for (int y = 0; y < FIELD_HEIGHT; y++) {
+    lines.to_clear_current = true;
+    for (int x = 0; lines.to_clear_current && x < FIELD_WIDTH; x++) {
+      if (GameState->field[y][x] != Locked) {
+        lines.to_clear_current = false;
+      }
+    }
+    if (lines.to_clear_current) {
+      lines.indeces[lines.num_cleared] = y;
+      lines.num_cleared++;
+    }
+  }
+  return lines;
+}
+
+void clearLines(LineClearInfo lines) {
+  GameInfo_t *GameState = getGameInfo();
+  for (int i = 0; i < lines.num_cleared; i++) {
+    for (int y = lines.indeces[i]; y > 0; y--) {
+      for (int x = 0; x < FIELD_WIDTH; x++) {
+        if (GameState->field[y - 1][x] != Locked) {
+          GameState->field[y][x] = GameState->field[y - 1][x];
+        }
+      }
+    }
+  }
+
+  switch (lines.num_cleared) {
+    case 1:
+      GameState->score += 100;
+      break;
+    case 2:
+      GameState->score += 300;
+      break;
+    case 3:
+      GameState->score += 700;
+      break;
+    case 4:
+      GameState->score += 1500;
+      break;
+    default:
+      break;
+  }
+}
+
 void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
   GameInfo_t *GameState = getGameInfo();
   Tetromino *tetromino = getTetromino();
+  int collision;
   switch (action) {
     case Left:
-      if (!checkCollision(tetromino, tetromino->x - 1, tetromino->y)) {
+      if (!checkCollision(tetromino, -1, 0)) {
         moveTetromino(tetromino, -1, 0);
       }
       break;
     case Right:
-      if (!checkCollision(tetromino, tetromino->x + 1, tetromino->y)) {
+      if (!checkCollision(tetromino, 1, 0)) {
         moveTetromino(tetromino, 1, 0);
       }
       break;
     case Down:
-      if (!checkCollision(tetromino, tetromino->x, tetromino->y + 1)) {
+      collision = checkCollision(tetromino, 0, 1);
+      if (collision == NoCollision) {
         moveTetromino(tetromino, 0, 1);
+      } else if (collision == LockingCollision) {
+        clearTetromino(tetromino);
+        lockTetromino(tetromino);
+        LineClearInfo lines = checkLineClear();
+        if (lines.num_cleared > 0) {
+          clearLines(lines);
+        }
+        initTetromino();
       }
       break;
     case Up:
-      if (!checkCollision(tetromino, tetromino->x, tetromino->y - 1)) {
+      if (!checkCollision(tetromino, 0, -1)) {
         moveTetromino(tetromino, 0, -1);
       }
 
@@ -238,7 +333,7 @@ void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
       GameState->pause = !GameState->pause;
       break;
     case Terminate:
-      // GameState->terminate = true;
+      GameState->terminate = true;
       break;
     case None:
       break;

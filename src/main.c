@@ -5,17 +5,14 @@
 int main() {
   initCurses();
   initGame();
+  GameInfo_t *gameState = getGameInfo();
   initTetromino();
-  while (true) {
+  while (gameState->terminate == false) {
     processInput();
     updateCurrentState();
     printField();
     napms(50);
   }
-  // processInput();
-  // printField();
-  // napms(1000);
-
   destroyGame();
   endwin();
 }
