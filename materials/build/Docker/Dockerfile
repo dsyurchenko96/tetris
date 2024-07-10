@@ -16,7 +16,7 @@ RUN mkdir -p /usr/src/;
 WORKDIR /usr/src/
 
 COPY ./src /usr/src/
-COPY ./materials/build/Valgrind/start.sh /usr/src
+COPY ./materials/build/Docker/start.sh /usr/src
 
 USER root
 

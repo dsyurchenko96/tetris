@@ -28,11 +28,11 @@ GameInfo_t updateCurrentState() {
 
 void initGame() {
   GameInfo_t *GameState = getGameInfo();
-  GameState->level = 1;
+  GameState->level = START_LEVEL;
   GameState->score = 0;
   GameState->high_score = 0;
   GameState->pause = 0;
-  GameState->speed = 1;
+  GameState->speed = 0;
 
   GameState->next = NULL;
   GameState->field = calloc(FIELD_HEIGHT, sizeof(int *));
@@ -93,7 +93,6 @@ void processInput() {
 int checkCollision(Tetromino *tetromino, int x, int y) {
   GameInfo_t *GameState = getGameInfo();
   int collision = NoCollision;
-  bool rotating = (!x && !y);
   for (int coordinate = 0; collision == NoCollision && coordinate < NUM_BLOCKS;
        coordinate++) {
     int next_x = tetromino->x + x +
@@ -102,7 +101,7 @@ int checkCollision(Tetromino *tetromino, int x, int y) {
                  tetromino->coordinates[tetromino->state][coordinate].y;
 
     if (next_x < 0 || next_x >= FIELD_WIDTH || next_y < 0 ||
-        (rotating && (next_y >= FIELD_HEIGHT)) ||
+        (!x && !y && (next_y >= FIELD_HEIGHT)) ||
         (!y && GameState->field[next_y][next_x] == Locked)) {
       collision = HorizontalCollision;
 
@@ -137,24 +136,23 @@ void lockTetromino(Tetromino *tetromino) {
   }
 }
 
-void initTetromino() {
+int initTetromino() {
   TetrominoType tetrominoArray[] = {O, I, S, Z, L, J, T};
 
   Tetromino *tetromino = getTetromino();
   tetromino->x = SPAWN_X;
   tetromino->y = SPAWN_Y;
-  tetromino->color = 0;
   tetromino->previous_state = 0;
   tetromino->state = 0;
 
   int index = (int)((double)random() / ((double)RAND_MAX + 1) * NUM_TETROMINOS);
-  spawnTetromino(tetrominoArray[index]);
+  return spawnTetromino(tetrominoArray[index]);
 }
 
-void spawnTetromino(TetrominoType type) {
+int spawnTetromino(TetrominoType type) {
   Tetromino *tetromino = getTetromino();
   tetromino->type = type;
-  // tetromino->color = random() % NUM_COLORS;
+  // tetromino->color = TETROMINO_COLORS[tetromino->type];
   tetromino->number_of_states = STATES_COUNT[tetromino->type];
 
   for (int state = 0; state < tetromino->number_of_states; state++) {
@@ -163,15 +161,19 @@ void spawnTetromino(TetrominoType type) {
           COORDINATES[tetromino->type][state][coordinate];
     }
   }
-
-  // put tetromino into the game field
-  GameInfo_t *GameState = getGameInfo();
-  for (int i = 0; i < 4; i++) {
-    GameState
-        ->field[tetromino->y + tetromino->coordinates[tetromino->state][i].y]
-               [tetromino->x + tetromino->coordinates[tetromino->state][i].x] =
-        Moving;
+  int collision = checkCollision(tetromino, 0, 0);
+  if (collision == NoCollision) {
+    // put tetromino into the game field
+    GameInfo_t *GameState = getGameInfo();
+    for (int i = 0; i < 4; i++) {
+      GameState
+          ->field[tetromino->y + tetromino->coordinates[tetromino->state][i].y]
+                 [tetromino->x +
+                  tetromino->coordinates[tetromino->state][i].x] = Moving;
+    }
   }
+
+  return collision;
 }
 
 void moveTetromino(Tetromino *tetromino, int x, int y) {
