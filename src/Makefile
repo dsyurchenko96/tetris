@@ -80,7 +80,7 @@ gcov_report: test
 	$(OPENER) ./$(BUILD_DIR)/gcov_report/index.html
 
 style:
-	clang-format -i -style=file:"../materials/linters/.clang-format" $(BACKEND_DIR)/*.c $(FRONTEND_DIR)/*.c $(TEST_DIR)/*.c $(TEST_DIR)/*.h *.c *.h
+	clang-format -i -style=file:"../materials/linters/.clang-format" $(BACKEND_DIR)/*.c $(FRONTEND_DIR)/*.c $(FRONTEND_DIR)/*.h $(TEST_DIR)/*.c $(TEST_DIR)/*.h *.c *.h
 
 clean:
 	rm -rf $(BUILD_DIR)/* $(TARGET).a

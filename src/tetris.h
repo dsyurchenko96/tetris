@@ -3,16 +3,8 @@
 
 #include <stdbool.h>
 
-#define MVPRINTW(y, x, ...) \
-  mvprintw(BOARDS_BEGIN + (y), BOARDS_BEGIN + (x), __VA_ARGS__)
-#define MVADDCH(y, x, c) mvaddch(BOARDS_BEGIN + (y), BOARDS_BEGIN + (x), c)
-
-#define BOARDS_BEGIN 2
 #define FIELD_HEIGHT 20
 #define FIELD_WIDTH 10
-#define FIELD_PADDING 1
-#define FIELD_N (FIELD_HEIGHT + FIELD_PADDING * 2)
-#define FIELD_M (FIELD_WIDTH + FIELD_PADDING * 2)
 
 #define SPAWN_X 4
 #define SPAWN_Y 1
@@ -37,18 +29,23 @@ typedef enum {
 
 typedef enum { O, I, S, Z, L, J, T } TetrominoType;
 
-// typedef enum {
-//     Yellow,
-//     Cyan,
-//     Green,
-//     Red,
-//     Orange,
-//     Blue,
-//     Purple
-// } TetrominoColor;
+typedef enum {
+  Default,
+  Yellow,
+  Cyan,
+  Green,
+  Red,
+  Orange,
+  Blue,
+  Purple
+} TetrominoColor;
 
-// TetrominoColor TETROMINO_COLORS[NUM_TETROMINOS] = {Yellow, Cyan, Green, Red,
-// Orange, Blue, Purple};
+static const TetrominoColor TETROMINO_COLORS[NUM_TETROMINOS + 1] = {
+    Default, Yellow, Cyan, Green, Red, Orange, Blue, Purple};
+// int NCURSES_COLORS[NUM_TETROMINOS] = {COLOR_YELLOW, COLOR_CYAN, COLOR_GREEN,
+// COLOR_RED, COLOR_MAGENTA, COLOR_BLUE, COLOR_MAGENTA};
+
+typedef enum { StateByte, ColorByte } ByteIndeces;
 
 typedef enum { Empty, Moving, Locked } FieldCellState;
 
@@ -141,6 +138,10 @@ int initTetromino();
 int spawnTetromino(TetrominoType type);
 void moveTetromino(Tetromino *tetromino, int x, int y);
 void rotateTetromino(Tetromino *tetromino);
+
+void setByte(int value, int index, int *num);
+int getByte(int index, int num);
+void setCellInfo(int *cell, int state, int color);
 
 LineClearInfo initLineInfo(void);
 LineClearInfo checkLineClear(void);

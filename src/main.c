@@ -22,7 +22,7 @@ int main() {
         if (lines.num_cleared > 0) {
           clearLines(lines);
         }
-        if (initTetromino() != NoCollision) {
+        if (initTetromino() == HorizontalCollision) {
           gameState->terminate = true;
         }
       }
