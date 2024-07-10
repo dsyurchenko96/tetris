@@ -82,6 +82,7 @@ typedef struct {
 
 typedef struct {
   TetrominoType type;
+  TetrominoType next_type;
   Coordinates coordinates[4][4];
   bool locked;
   int x;
@@ -149,6 +150,7 @@ void userInput(UserAction_t action, bool hold);
 
 void initCurses();
 void printField();
-void print_rectangle(int top_y, int bottom_y, int left_x, int right_x);
+void printRectangle(int top_y, int bottom_y, int left_x, int right_x);
+void printSideBar();
 
 #endif
