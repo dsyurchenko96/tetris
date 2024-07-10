@@ -21,11 +21,13 @@ TARGET = tetris
 # CHECK FOR SYSTEM
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME), Linux)
- CFLAGS += -lsubunit
- TEST_FLAGS = -pthread -lcheck -pthread -lrt -lm -lsubunit
+ CFLAGS += -D_XOPEN_SOURCE=600 # for random()
+ TEST_FLAGS = -pthread -lcheck -lrt -lm -lsubunit
  OPENER = xdg-open
 else ifeq ($(UNAME), Darwin)
-#  CC = gcc-13
+ ifeq ($(shell uname -m), arm64)
+  CC = gcc-13
+ endif
  TEST_FLAGS = $(shell pkg-config --cflags --libs check)
  OPENER = open
 endif
@@ -35,7 +37,7 @@ all: $(TARGET)
 $(TARGET): $(TARGET).a
 	$(CC) $(CFLAGS) -c main.c -o $(BUILD_DIR)/main.o
 	$(CC) $(CFLAGS) -c $(FRONTEND_DIR)/frontend.c -o $(BUILD_DIR)/frontend.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/main.o $(BUILD_DIR)/frontend.o $(TARGET).a -o $(BUILD_DIR)/$(TARGET)
+	$(CC) $(CFLAGS) $(BUILD_DIR)/main.o $(BUILD_DIR)/frontend.o $(TARGET).a -o $(BUILD_DIR)/$(TARGET) $(LDFLAGS)
 
 $(TARGET).a: $(OBJ)
 	ar rcs $(TARGET).a $^
@@ -53,7 +55,7 @@ $(BUILD_DIR)/%.gcov.o: $(BACKEND_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(GCOV_FLAGS) -o $@ $<
 
 $(TEST_OBJ): $(BUILD_DIR)/%.o: $(TEST_DIR)/%.c
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) -o $@ $< $(TEST_FLAGS)
 
 
 covered: $(GCOV_OBJ_O)
@@ -65,8 +67,8 @@ test.a: $(TEST_OBJ)
 	ranlib $(BUILD_DIR)/test.a
 
 test_compile: clean covered test.a
-	$(CC) $(CFLAGS) $(GCOV_FLAGS) -c $(TEST_DIR)/test_suite.c -o $(BUILD_DIR)/test_suite.o
-	$(CC) $(CFLAGS) $(GCOV_FLAGS) $(LDFLAGS) $(BUILD_DIR)/test_suite.o $(BUILD_DIR)/test.a $(TARGET).a -o $(BUILD_DIR)/test $(TEST_FLAGS)
+	$(CC) $(CFLAGS) $(GCOV_FLAGS) -c $(TEST_DIR)/test_suite.c -o $(BUILD_DIR)/test_suite.o $(TEST_FLAGS)
+	$(CC) $(CFLAGS) $(GCOV_FLAGS) $(BUILD_DIR)/test_suite.o $(BUILD_DIR)/test.a $(TARGET).a -o $(BUILD_DIR)/test $(LDFLAGS) $(TEST_FLAGS)
 
 test: test_compile
 	./$(BUILD_DIR)/test
@@ -102,7 +104,7 @@ else ifeq ($(UNAME), Darwin)
 	leaks --atExit -- ./$(BUILD_DIR)/test
 endif
 
-valgrind:
-	cd ../materials/build/Valgrind && bash run.sh
+docker:
+	cd ../materials/build/Docker && bash run.sh
 
 .PHONY: all clean gcov_report style rebuild beforecommit test_leaks

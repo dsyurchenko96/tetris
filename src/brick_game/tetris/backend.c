@@ -5,7 +5,7 @@
 #include <time.h>
 
 // #define _POSIX_C_SOURCE 199309L
-#define _DEFAULT_SOURCE
+// #define _DEFAULT_SOURCE
 
 #include "../../tetris.h"
 
