@@ -4,6 +4,7 @@ LDFLAGS = -lncurses
 GCOV_FLAGS = -ftest-coverage -fprofile-arcs -fPIC
 
 BACKEND_DIR = brick_game/tetris
+FRONTEND_DIR = gui/cli
 TEST_DIR = tests
 BUILD_DIR = build
 
@@ -29,18 +30,21 @@ else ifeq ($(UNAME), Darwin)
  OPENER = open
 endif
 
-all: $(TARGET).a
+all: $(TARGET)
+
+$(TARGET): $(TARGET).a
+	$(CC) $(CFLAGS) -c main.c -o $(BUILD_DIR)/main.o
+	$(CC) $(CFLAGS) -c $(FRONTEND_DIR)/frontend.c -o $(BUILD_DIR)/frontend.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/main.o $(BUILD_DIR)/frontend.o $(TARGET).a -o $(BUILD_DIR)/$(TARGET)
 
 $(TARGET).a: $(OBJ)
 	ar rcs $(TARGET).a $^
 	ranlib $(TARGET).a
 
-play: clean $(TARGET).a
-	$(CC) $(CFLAGS) -c main.c -o $(BUILD_DIR)/main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BUILD_DIR)/main.o $(TARGET).a -o $(BUILD_DIR)/$(TARGET)
+play: $(TARGET)
 	./$(BUILD_DIR)/$(TARGET)
 
-# replay: clean play
+replay: clean play
 
 $(BUILD_DIR)/%.o: $(BACKEND_DIR)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<

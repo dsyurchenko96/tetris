@@ -140,18 +140,29 @@ GameInfo_t updateCurrentState();
 GameInfo_t *getGameInfo();
 Tetromino *getTetromino();
 GameInfo_t updateCurrentState();
+
 void initGame();
 void destroyGame();
-void printField();
 void processInput();
 int checkCollision(Tetromino *tetromino, int x, int y);
-void moveTetromino(Tetromino *tetromino, int x, int y);
-void rotateTetromino(Tetromino *tetromino);
-void userInput(UserAction_t action, bool hold);
 
+void clearTetromino(Tetromino *tetromino);
+void lockTetromino(Tetromino *tetromino);
 void initTetromino();
 void spawnTetromino(TetrominoType type);
+void moveTetromino(Tetromino *tetromino, int x, int y);
+void rotateTetromino(Tetromino *tetromino);
+
+LineClearInfo initLineInfo(void);
+LineClearInfo checkLineClear(void);
+void clearLines(LineClearInfo lines);
+
+void userInput(UserAction_t action, bool hold);
+
+
+
 void initCurses();
+void printField();
 
 
 
