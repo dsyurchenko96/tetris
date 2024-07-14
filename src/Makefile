@@ -25,9 +25,9 @@ ifeq ($(UNAME), Linux)
  TEST_FLAGS = -pthread -lcheck -lrt -lm -lsubunit
  OPENER = xdg-open
 else ifeq ($(UNAME), Darwin)
- ifeq ($(shell uname -m), arm64)
-  CC = gcc-13
- endif
+#  ifeq ($(shell uname -m), arm64)
+#   CC = gcc-13
+#  endif
  TEST_FLAGS = $(shell pkg-config --cflags --libs check)
  OPENER = open
 endif

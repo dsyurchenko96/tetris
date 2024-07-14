@@ -6,10 +6,11 @@ int main() {
   initCurses();
   initGame();
   GameInfo_t *gameState = getGameInfo();
-  initTetromino();
+  initTetromino(INIT);
+
   int fall_count = 0;
   while (gameState->terminate == false) {
-    gameState->speed = 1000 / gameState->level;
+    gameState->speed = INITIAL_SPEED / gameState->level;
     if (fall_count >= gameState->speed) {
       Tetromino *tetromino = getTetromino();
       int collision = checkCollision(tetromino, 0, 1);
@@ -22,7 +23,8 @@ int main() {
         if (lines.num_cleared > 0) {
           clearLines(lines);
         }
-        if (initTetromino() == HorizontalCollision) {
+        clearGameInfoNextTetromino();
+        if (initTetromino(generateRandomTetromino()) == HorizontalCollision) {
           gameState->terminate = true;
         }
       }

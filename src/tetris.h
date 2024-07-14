@@ -13,7 +13,8 @@
 #define NUM_BLOCKS 4
 
 #define START_LEVEL 1  // 1 - 10
-#define TICK 50
+#define INITIAL_SPEED 1000
+#define TICK 30
 
 typedef enum {
   Start,
@@ -24,10 +25,9 @@ typedef enum {
   Up,
   Down,
   Action,
-  None
 } UserAction_t;
 
-typedef enum { O, I, S, Z, L, J, T } TetrominoType;
+typedef enum { O, I, S, Z, L, J, T, INIT } TetrominoType;
 
 typedef enum {
   Default,
@@ -80,8 +80,6 @@ typedef struct {
 typedef struct {
   TetrominoType type;
   TetrominoType next_type;
-  Coordinates coordinates[4][4];
-  bool locked;
   int x;
   int y;
   int color;
@@ -132,12 +130,15 @@ void destroyGame();
 void processInput();
 int checkCollision(Tetromino *tetromino, int x, int y);
 
+TetrominoType generateRandomTetromino();
+int initTetromino(TetrominoType next_type);
+int spawnTetromino(Tetromino *tetromino);
 void clearTetromino(Tetromino *tetromino);
 void lockTetromino(Tetromino *tetromino);
-int initTetromino();
-int spawnTetromino(TetrominoType type);
 void moveTetromino(Tetromino *tetromino, int x, int y);
 void rotateTetromino(Tetromino *tetromino);
+void setGameInfoNextTetromino(Tetromino *tetromino);
+void clearGameInfoNextTetromino();
 
 void setByte(int value, int index, int *num);
 int getByte(int index, int num);
@@ -153,5 +154,6 @@ void initCurses();
 void printField();
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x);
 void printSideBar();
+void printNextTetromino();
 
 #endif
