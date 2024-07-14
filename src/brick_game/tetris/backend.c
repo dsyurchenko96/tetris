@@ -10,7 +10,12 @@
 #include "../../tetris.h"
 
 GameInfo_t *getGameInfo() {
-  static GameInfo_t gameState;
+  static GameInfo_t gameInfo;
+  return &gameInfo;
+}
+
+GameState *getGameState() {
+  static GameState gameState;
   return &gameState;
 }
 
@@ -19,43 +24,40 @@ Tetromino *getTetromino() {
   return &tetromino;
 }
 
-GameInfo_t updateCurrentState() {
-  GameInfo_t *gameState = getGameInfo();
-
-  return *gameState;
-}
-
 void initGame() {
-  GameInfo_t *GameState = getGameInfo();
-  GameState->level = START_LEVEL;
-  GameState->score = 0;
-  GameState->high_score = 0;
-  GameState->pause = 0;
-  GameState->speed = 0;
+  GameState *gameState = getGameState();
+  *gameState = Started;
 
-  GameState->field = calloc(FIELD_HEIGHT, sizeof(int *));
+  GameInfo_t *gameInfo = getGameInfo();
+  gameInfo->level = START_LEVEL;
+  gameInfo->score = 0;
+  gameInfo->high_score = 0;
+  gameInfo->pause = 0;
+  gameInfo->speed = 0;
+
+  gameInfo->field = calloc(FIELD_HEIGHT, sizeof(int *));
   for (int i = 0; i < FIELD_HEIGHT; i++) {
-    GameState->field[i] = calloc(FIELD_WIDTH, sizeof(int));
+    gameInfo->field[i] = calloc(FIELD_WIDTH, sizeof(int));
   }
 
-  GameState->next = calloc(NUM_BLOCKS, sizeof(int *));
+  gameInfo->next = calloc(NUM_BLOCKS, sizeof(int *));
   for (int i = 0; i < NUM_BLOCKS; i++) {
-    GameState->next[i] = calloc(NUM_BLOCKS, sizeof(int));
+    gameInfo->next[i] = calloc(NUM_BLOCKS, sizeof(int));
   }
   srandom(time(NULL));
 }
 
 void destroyGame() {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   for (int i = 0; i < FIELD_HEIGHT; i++) {
-    free(GameState->field[i]);
+    free(gameInfo->field[i]);
   }
-  free(GameState->field);
+  free(gameInfo->field);
 
   for (int i = 0; i < NUM_BLOCKS; i++) {
-    free(GameState->next[i]);
+    free(gameInfo->next[i]);
   }
-  free(GameState->next);
+  free(gameInfo->next);
 }
 
 void processInput() {
@@ -77,6 +79,10 @@ void processInput() {
       userInput(Right, false);
       break;
 
+    case '\n':
+      userInput(Start, false);
+      break;
+
     case ' ':
       userInput(Action, true);
       break;
@@ -94,8 +100,117 @@ void processInput() {
   }
 }
 
+void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
+  // GameInfo_t *gameInfo = getGameInfo();
+  Tetromino *tetromino = getTetromino();
+  GameState *gameState = getGameState();
+  // int collision;
+  switch (action) {
+    case Left:
+      if (!checkCollision(tetromino, -1, 0)) {
+        moveTetromino(tetromino, -1, 0);
+      }
+      *gameState = Shifting;
+      break;
+    case Right:
+      if (!checkCollision(tetromino, 1, 0)) {
+        moveTetromino(tetromino, 1, 0);
+      }
+      *gameState = Shifting;
+      break;
+    case Down:
+      *gameState = checkFallingCollision(tetromino);
+      // collision = checkCollision(tetromino, 0, 1);
+      // if (collision == NoCollision) {
+      //   // moveTetromino(tetromino, 0, 1);
+      //   *gameState = Falling;
+      // } else if (collision == LockingCollision) {
+      //   // clearTetromino(tetromino);
+      //   // lockTetromino(tetromino);
+      //   // clearGameInfoNextTetromino();
+      //   // LineClearInfo lines = checkLineClear();
+      //   // if (lines.num_cleared > 0) {
+      //   //   clearLines(lines);
+      //   // }
+      //   // initTetromino(generateRandomTetromino());
+      //   *gameState = Locking;
+      // }
+      break;
+    case Up:
+      break;
+    case Start:
+      if (*gameState == Started) {
+        *gameState = Spawning;
+      }
+      
+      break;
+    case Action:
+      // rotateTetromino(tetromino);
+      *gameState = Rotating;
+      break;
+    case Pause:
+      // gameInfo->pause = !gameInfo->pause;
+      *gameState = Paused;
+      break;
+    case Terminate:
+      *gameState = Terminated;
+      break;
+    default:
+      // *gameState = Idle;
+      break;
+  }
+}
+
+GameInfo_t updateCurrentState() {
+  GameInfo_t *gameInfo = getGameInfo();
+  GameState *gameState = getGameState();
+  Tetromino *tetromino = getTetromino();
+
+  switch (*gameState) {
+    case Idle:
+      break;
+    case Started:
+      break;
+    case Shifting:
+      break;
+    case Locking:
+      clearTetromino(tetromino);
+      lockTetromino(tetromino);
+      clearGameInfoNextTetromino();
+      LineClearInfo lines = checkLineClear();
+      if (lines.num_cleared > 0) {
+        clearLines(lines);
+      }
+      *gameState = Spawning;
+      break;
+    case Rotating:
+      rotateTetromino(tetromino);
+      break;
+    case Falling:
+      moveTetromino(tetromino, 0, 1);
+      break;
+    case Paused:
+      gameInfo->pause = !gameInfo->pause;
+      break;
+    case Spawning:
+      if (initTetromino(generateRandomTetromino()) == HorizontalCollision) {
+        *gameState = Terminated;
+      }
+      *gameState = Idle;
+      break;
+    case Terminated:
+      break;
+    
+
+    default:
+      break;
+  }
+
+  return *gameInfo;
+}
+
 int checkCollision(Tetromino *tetromino, int x, int y) {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   int collision = NoCollision;
   for (int coordinate = 0; collision == NoCollision && coordinate < NUM_BLOCKS;
        coordinate++) {
@@ -106,21 +221,29 @@ int checkCollision(Tetromino *tetromino, int x, int y) {
 
     if (next_x < 0 || next_x >= FIELD_WIDTH || next_y < 0 ||
         (!x && !y && (next_y >= FIELD_HEIGHT)) ||
-        (!y &&
-         getByte(StateByte, GameState->field[next_y][next_x]) == Locked)) {
-      // GameState->field[next_y][next_x] == Locked
+        (!y && getByte(StateByte, gameInfo->field[next_y][next_x]) == Locked)) {
+      // gameInfo->field[next_y][next_x] == Locked
       collision = HorizontalCollision;
 
     } else if ((y && next_y >= FIELD_HEIGHT) ||
                (!x && y &&
-                getByte(StateByte, GameState->field[next_y][next_x]) ==
+                getByte(StateByte, gameInfo->field[next_y][next_x]) ==
                     Locked)) {
-      // GameState->field[next_y][next_x] == Locked
+      // gameInfo->field[next_y][next_x] == Locked
       collision = LockingCollision;
     }
   }
 
   return collision;
+}
+
+GameState checkFallingCollision(Tetromino *tetromino) {
+  GameState gameState = Falling;
+  int collision = checkCollision(tetromino, 0, 1);
+  if (collision == LockingCollision) {
+    gameState = Locking;
+  }
+  return gameState;
 }
 
 LineClearInfo initLineInfo(void) {
@@ -135,12 +258,12 @@ LineClearInfo initLineInfo(void) {
 }
 
 LineClearInfo checkLineClear(void) {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   LineClearInfo lines = initLineInfo();
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     lines.to_clear_current = true;
     for (int x = 0; lines.to_clear_current && x < FIELD_WIDTH; x++) {
-      if (getByte(StateByte, GameState->field[y][x]) != Locked) {
+      if (getByte(StateByte, gameInfo->field[y][x]) != Locked) {
         lines.to_clear_current = false;
       }
     }
@@ -153,85 +276,44 @@ LineClearInfo checkLineClear(void) {
 }
 
 void clearLines(LineClearInfo lines) {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   for (int i = 0; i < lines.num_cleared; i++) {
     for (int y = lines.indeces[i]; y > 0; y--) {
       for (int x = 0; x < FIELD_WIDTH; x++) {
-        if (getByte(StateByte, GameState->field[y - 1][x]) != Locked) {
-          GameState->field[y][x] = GameState->field[y - 1][x];
+        if (getByte(StateByte, gameInfo->field[y - 1][x]) != Locked) {
+          gameInfo->field[y][x] = gameInfo->field[y - 1][x];
         }
       }
     }
   }
 
-  switch (lines.num_cleared) {
-    case 1:
-      GameState->score += 100;
-      break;
-    case 2:
-      GameState->score += 300;
-      break;
-    case 3:
-      GameState->score += 700;
-      break;
-    case 4:
-      GameState->score += 1500;
-      break;
-    default:
-      break;
-  }
-
-  if (GameState->level < 10 && GameState->level * 600 < GameState->score) {
-    GameState->level++;
-  }
+  updateScoreLevel(lines);
 }
 
-void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
-  GameInfo_t *GameState = getGameInfo();
-  Tetromino *tetromino = getTetromino();
-  int collision;
-  switch (action) {
-    case Left:
-      if (!checkCollision(tetromino, -1, 0)) {
-        moveTetromino(tetromino, -1, 0);
-      }
+void updateScoreLevel(LineClearInfo lines) {
+  GameInfo_t *gameInfo = getGameInfo();
+  switch (lines.num_cleared) {
+    case 1:
+      gameInfo->score += 100;
       break;
-    case Right:
-      if (!checkCollision(tetromino, 1, 0)) {
-        moveTetromino(tetromino, 1, 0);
-      }
+    case 2:
+      gameInfo->score += 300;
       break;
-    case Down:
-      collision = checkCollision(tetromino, 0, 1);
-      if (collision == NoCollision) {
-        moveTetromino(tetromino, 0, 1);
-      } else if (collision == LockingCollision) {
-        clearTetromino(tetromino);
-        lockTetromino(tetromino);
-        clearGameInfoNextTetromino();
-        LineClearInfo lines = checkLineClear();
-        if (lines.num_cleared > 0) {
-          clearLines(lines);
-        }
-        initTetromino(generateRandomTetromino());
-      }
+    case 3:
+      gameInfo->score += 700;
       break;
-    case Up:
-      // if (!checkCollision(tetromino, 0, -1)) {
-      //   moveTetromino(tetromino, 0, -1);
-      // }
-
-      break;
-    case Action:
-      rotateTetromino(tetromino);
-      break;
-    case Pause:
-      GameState->pause = !GameState->pause;
-      break;
-    case Terminate:
-      GameState->terminate = true;
+    case 4:
+      gameInfo->score += 1500;
       break;
     default:
       break;
+  }
+
+  if (gameInfo->score > gameInfo->high_score) {
+    gameInfo->high_score = gameInfo->score;
+  }
+
+  if (gameInfo->level < 10 && gameInfo->level * 600 < gameInfo->score) {
+    gameInfo->level++;
   }
 }

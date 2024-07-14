@@ -17,6 +17,18 @@
 #define TICK 30
 
 typedef enum {
+  Started,
+  Paused,
+  Terminated,
+  Idle,
+  Shifting,
+  Rotating,
+  Falling,
+  Locking,
+  Spawning
+} GameState;
+
+typedef enum {
   Start,
   Pause,
   Terminate,
@@ -69,7 +81,6 @@ typedef struct {
   int level;
   int speed;
   int pause;
-  int terminate;
 } GameInfo_t;
 
 typedef struct {
@@ -124,11 +135,13 @@ GameInfo_t updateCurrentState();
 GameInfo_t *getGameInfo();
 Tetromino *getTetromino();
 GameInfo_t updateCurrentState();
+GameState *getGameState();
 
 void initGame();
 void destroyGame();
 void processInput();
 int checkCollision(Tetromino *tetromino, int x, int y);
+GameState checkFallingCollision(Tetromino *tetromino);
 
 TetrominoType generateRandomTetromino();
 int initTetromino(TetrominoType next_type);
@@ -147,10 +160,12 @@ void setCellInfo(int *cell, int state, int color);
 LineClearInfo initLineInfo(void);
 LineClearInfo checkLineClear(void);
 void clearLines(LineClearInfo lines);
+void updateScoreLevel(LineClearInfo lines);
 
 void userInput(UserAction_t action, bool hold);
 
 void initCurses();
+void printStartingScreen();
 void printField();
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x);
 void printSideBar();

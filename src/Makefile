@@ -43,11 +43,6 @@ $(TARGET).a: $(OBJ)
 	ar rcs $(TARGET).a $^
 	ranlib $(TARGET).a
 
-play: $(TARGET)
-	./$(BUILD_DIR)/$(TARGET)
-
-replay: clean play
-
 $(BUILD_DIR)/%.o: $(BACKEND_DIR)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
@@ -57,7 +52,9 @@ $(BUILD_DIR)/%.gcov.o: $(BACKEND_DIR)/%.c
 $(TEST_OBJ): $(BUILD_DIR)/%.o: $(TEST_DIR)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $< $(TEST_FLAGS)
 
-
+play: clean $(TARGET)
+	./$(BUILD_DIR)/$(TARGET)
+	
 covered: $(GCOV_OBJ_O)
 	ar rcs $(TARGET).a $(GCOV_OBJ_O)
 	ranlib $(TARGET).a

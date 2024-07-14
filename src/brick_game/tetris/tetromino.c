@@ -3,44 +3,27 @@
 #include "../../tetris.h"
 
 void clearTetromino(Tetromino *tetromino) {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
-    GameState->field
+    gameInfo->field
         [tetromino->y +
          COORDINATES[tetromino->type][tetromino->previous_state][coordinate].y]
         [tetromino->x +
          COORDINATES[tetromino->type][tetromino->previous_state][coordinate]
              .x] = Empty;
-    // GameState->field[tetromino->y +
-    //                  tetromino->coordinates[tetromino->previous_state][coordinate].y]
-    //                 [tetromino->x +
-    //                  tetromino->coordinates[tetromino->previous_state][coordinate].x]
-    //                  =
-    //     Empty;
   }
 }
 
 void lockTetromino(Tetromino *tetromino) {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
     setCellInfo(
-        &GameState->field
+        &gameInfo->field
              [tetromino->y +
               COORDINATES[tetromino->type][tetromino->state][coordinate].y]
              [tetromino->x +
               COORDINATES[tetromino->type][tetromino->state][coordinate].x],
         Locked, tetromino->color);
-    // setCellInfo(tetromino->x +
-    // tetromino->coordinates[tetromino->state][coordinate].x,
-    //               tetromino->y +
-    //               tetromino->coordinates[tetromino->state][coordinate].y,
-    //               Locked, tetromino->color);
-    // GameState->field[tetromino->y +
-    //                  tetromino->coordinates[tetromino->state][coordinate].y]
-    //                 [tetromino->x +
-    //                  tetromino->coordinates[tetromino->state][coordinate].x]
-    //                  =
-    //     Locked;
   }
 }
 
@@ -58,43 +41,30 @@ int initTetromino(TetrominoType next_type) {
     tetromino->type = tetromino->next_type;
     tetromino->next_type = next_type;
   }
-  // tetromino->type = type;
   tetromino->color = TETROMINO_COLORS[tetromino->type + 1];
   tetromino->number_of_states = STATES_COUNT[tetromino->type];
-
-  // for (int state = 0; state < tetromino->number_of_states; state++) {
-  //   for (int coordinate = 0; coordinate < 4; coordinate++) {
-  //     tetromino->coordinates[state][coordinate] =
-  //         COORDINATES[tetromino->type][state][coordinate];
-  //   }
-  // }
 
   setGameInfoNextTetromino(tetromino);
   return spawnTetromino(tetromino);
 }
 
 void setGameInfoNextTetromino(Tetromino *tetromino) {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
 
   for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
     setCellInfo(
-        &GameState->next[COORDINATES[tetromino->next_type][0][coordinate].y + 2]
-                        [COORDINATES[tetromino->next_type][0][coordinate].x] +
+        &gameInfo->next[COORDINATES[tetromino->next_type][0][coordinate].y + 2]
+                       [COORDINATES[tetromino->next_type][0][coordinate].x] +
             2,
         Locked, TETROMINO_COLORS[tetromino->next_type + 1]);
   }
-  // GameState->next = calloc(NUM_BLOCKS, sizeof(int*));
-
-  // for (int i = 0; i < NUM_BLOCKS; i++) {
-  //   GameState->next[i] = calloc(NUM_BLOCKS, sizeof(int));
-  // }
 }
 
 void clearGameInfoNextTetromino() {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   for (int i = 0; i < NUM_BLOCKS; i++) {
     for (int j = 0; j < NUM_BLOCKS; j++) {
-      GameState->next[i][j] = 0;
+      gameInfo->next[i][j] = 0;
     }
   }
 }
@@ -108,26 +78,15 @@ TetrominoType generateRandomTetromino() {
 int spawnTetromino(Tetromino *tetromino) {
   int collision = checkCollision(tetromino, 0, 0);
   if (collision == NoCollision) {
-    // put tetromino into the game field
-    GameInfo_t *GameState = getGameInfo();
+    GameInfo_t *gameInfo = getGameInfo();
     for (int coordinate = 0; coordinate < 4; coordinate++) {
       setCellInfo(
-          &GameState->field
+          &gameInfo->field
                [tetromino->y +
                 COORDINATES[tetromino->type][tetromino->state][coordinate].y]
                [tetromino->x +
                 COORDINATES[tetromino->type][tetromino->state][coordinate].x],
           Moving, tetromino->color);
-      // setCellInfo(tetromino->x +
-      // tetromino->coordinates[tetromino->state][i].x,
-      //             tetromino->y +
-      //             tetromino->coordinates[tetromino->state][i].y, Moving,
-      //             tetromino->color);
-      // GameState
-      //     ->field[tetromino->y +
-      //     tetromino->coordinates[tetromino->state][i].y]
-      //            [tetromino->x +
-      //             tetromino->coordinates[tetromino->state][i].x] = Moving;
     }
   }
 
@@ -140,24 +99,15 @@ void moveTetromino(Tetromino *tetromino, int x, int y) {
   tetromino->x += x;
   tetromino->y += y;
 
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   for (int coordinate = 0; coordinate < 4; coordinate++) {
     setCellInfo(
-        &GameState->field
+        &gameInfo->field
              [tetromino->y +
               COORDINATES[tetromino->type][tetromino->state][coordinate].y]
              [tetromino->x +
               COORDINATES[tetromino->type][tetromino->state][coordinate].x],
         Moving, tetromino->color);
-    // setCellInfo(tetromino->x + tetromino->coordinates[tetromino->state][i].x,
-    //               tetromino->y +
-    //               tetromino->coordinates[tetromino->state][i].y, Moving,
-    //               tetromino->color);
-    // GameState
-    //     ->field[tetromino->y + tetromino->coordinates[tetromino->state][i].y]
-    //            [tetromino->x + tetromino->coordinates[tetromino->state][i].x]
-    //            =
-    //     Moving;
   }
 }
 

@@ -3,6 +3,15 @@
 #include <ncurses.h>
 #include <stdbool.h>
 
+void printStartingScreen() {
+  clear();
+  printRectangle(0, FIELD_N, 0, FIELD_M);
+  MVPRINTW(2, 8, "TETRIS");
+  MVPRINTW(4, 5, "Press 'Enter'");
+  MVPRINTW(5, 7, "to start");
+  refresh();
+}
+
 void printField() {
   clear();
   printRectangle(0, FIELD_N, 0, FIELD_M);
@@ -12,11 +21,14 @@ void printField() {
     for (int j = 0; j < FIELD_WIDTH; j++) {
       int state = getByte(StateByte, GameState->field[i][j]);
       int color = getByte(ColorByte, GameState->field[i][j]);
-      if (state != Empty) {
+      if (has_colors() == TRUE && state != Empty) {
         attron(COLOR_PAIR(color));
         MVADDCH(i + 1, j * 2 + 1, ' ' | A_REVERSE);
         MVADDCH(i + 1, j * 2 + 2, ' ' | A_REVERSE);
         attroff(COLOR_PAIR(color));
+      } else if (has_colors() == FALSE && state != Empty) {
+        MVADDCH(i + 1, j * 2 + 1, '[');
+        MVADDCH(i + 1, j * 2 + 2, ']');
       } else {
         MVADDCH(i + 1, j * 2 + 1, ' ');
         MVADDCH(i + 1, j * 2 + 2, ' ');
@@ -34,12 +46,15 @@ void printNextTetromino() {
     for (int j = 0; j < 4; j++) {
       int state = getByte(StateByte, GameState->next[i][j]);
       int color = getByte(ColorByte, GameState->next[i][j]);
-      if (state != Empty) {
+      if (has_colors() == TRUE && state != Empty) {
         // MVPRINTW(i + 10, SIDEBAR_X + j, "1");
         attron(COLOR_PAIR(color));
         MVADDCH(i + 10, SIDEBAR_X + j * 2 + 1, ' ' | A_REVERSE);
         MVADDCH(i + 10, SIDEBAR_X + j * 2 + 2, ' ' | A_REVERSE);
         attroff(COLOR_PAIR(color));
+      } else if (has_colors() == FALSE && state != Empty) {
+        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 1, '[');
+        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 2, ']');
       } else {
         // MVPRINTW(i + 10, SIDEBAR_X + j, "0");
         MVADDCH(i + 10, SIDEBAR_X + j * 2 + 1, ' ');
@@ -97,11 +112,7 @@ void initCurses() {
   nodelay(stdscr, TRUE);
   curs_set(FALSE);
   // setlocale(LC_ALL, "");
-  if (has_colors() == FALSE) {
-    endwin();
-    printf("Your terminal does not support color\n");
-    // exit(1);
-  } else {
+  if (has_colors() == TRUE) {
     start_color();
 
     // TetrominoColor TETROMINO_COLORS[NUM_TETROMINOS] = {Yellow, Cyan, Green,
