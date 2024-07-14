@@ -6,8 +6,8 @@
 #define FIELD_HEIGHT 20
 #define FIELD_WIDTH 10
 
-#define SPAWN_X 4
-#define SPAWN_Y 1
+#define SPAWN_X 5
+#define SPAWN_Y 2
 
 #define NUM_TETROMINOS 7
 #define NUM_BLOCKS 4

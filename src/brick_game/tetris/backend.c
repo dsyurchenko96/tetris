@@ -154,7 +154,7 @@ void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
       break;
     case Action:
       // rotateTetromino(tetromino);
-      if (!gameInfo->pause && *gameState >= Idle) {
+      if (*gameState >= Idle) {
         *gameState = Rotating;
       }
       break;

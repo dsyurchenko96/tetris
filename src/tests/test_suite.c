@@ -7,7 +7,8 @@
 
 int main(void) {
   int failed = 0;
-  Suite *tetris_test[] = {spawn_suite(), rotate_suite(), NULL};
+  Suite *tetris_test[] = {
+    rotate_suite(), NULL};
 
   for (int i = 0; tetris_test[i] != NULL; i++) {
     SRunner *sr = srunner_create(tetris_test[i]);

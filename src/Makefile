@@ -49,7 +49,7 @@ $(BUILD_DIR)/%.o: $(BACKEND_DIR)/%.c
 $(BUILD_DIR)/%.gcov.o: $(BACKEND_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(GCOV_FLAGS) -o $@ $<
 
-$(TEST_OBJ): $(BUILD_DIR)/%.o: $(TEST_DIR)/%.c
+$(TEST_OBJ): $(BUILD_DIR)/test_%.o: $(TEST_DIR)/test_%.c
 	$(CC) -c $(CFLAGS) -o $@ $< $(TEST_FLAGS)
 
 play: clean $(TARGET)
