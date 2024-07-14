@@ -25,6 +25,9 @@ Tetromino *getTetromino() {
 }
 
 void initGame() {
+  Tetromino *tetromino = getTetromino();
+  tetromino->next_type = generateRandomTetromino();
+
   GameState *gameState = getGameState();
   *gameState = Started;
 
@@ -107,19 +110,24 @@ void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
   // int collision;
   switch (action) {
     case Left:
-      if (!checkCollision(tetromino, -1, 0)) {
+      if (*gameState >= Idle && !checkCollision(tetromino, -1, 0)) {
         moveTetromino(tetromino, -1, 0);
+        *gameState = Shifting;
       }
-      *gameState = Shifting;
+      
       break;
     case Right:
-      if (!checkCollision(tetromino, 1, 0)) {
+      if (*gameState >= Idle && !checkCollision(tetromino, 1, 0)) {
         moveTetromino(tetromino, 1, 0);
+        *gameState = Shifting;
       }
-      *gameState = Shifting;
+      
       break;
     case Down:
-      *gameState = checkFallingCollision(tetromino);
+      if (*gameState >= Idle) {
+        *gameState = checkFallingCollision(tetromino);
+      }
+      
       // collision = checkCollision(tetromino, 0, 1);
       // if (collision == NoCollision) {
       //   // moveTetromino(tetromino, 0, 1);
@@ -146,11 +154,16 @@ void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
       break;
     case Action:
       // rotateTetromino(tetromino);
-      *gameState = Rotating;
+      if (*gameState >= Idle) {
+        *gameState = Rotating;
+      }
       break;
     case Pause:
       // gameInfo->pause = !gameInfo->pause;
-      *gameState = Paused;
+      if (*gameState > Started) {
+        *gameState = Paused;
+      }
+      
       break;
     case Terminate:
       *gameState = Terminated;
@@ -185,9 +198,11 @@ GameInfo_t updateCurrentState() {
       break;
     case Rotating:
       rotateTetromino(tetromino);
+      *gameState = Idle;
       break;
     case Falling:
       moveTetromino(tetromino, 0, 1);
+      *gameState = Idle;
       break;
     case Paused:
       gameInfo->pause = !gameInfo->pause;
@@ -195,8 +210,9 @@ GameInfo_t updateCurrentState() {
     case Spawning:
       if (initTetromino(generateRandomTetromino()) == HorizontalCollision) {
         *gameState = Terminated;
+      } else {
+        *gameState = Idle;
       }
-      *gameState = Idle;
       break;
     case Terminated:
       break;

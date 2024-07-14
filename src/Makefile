@@ -94,6 +94,9 @@ beforecommit:
 	make statictest
 	make clean
 
+debug: rebuild
+	lldb $(BUILD_DIR)/$(TARGET)
+
 test_leaks: test_compile
 ifeq ($(UNAME), Linux)
 	valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(BUILD_DIR)/test

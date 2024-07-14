@@ -4,9 +4,8 @@
 
 int main() {
   // GameInfo_t *gameInfo = getGameInfo();
-  GameState *gameState = getGameState();
-  Tetromino *tetromino = getTetromino();
-  tetromino->next_type = generateRandomTetromino();
+  
+  
 
   initCurses();
   initGame();
@@ -15,13 +14,13 @@ int main() {
   printStartingScreen();
 
   int tick_count = 0;
-
+  GameState *gameState = getGameState();
   while (*gameState != Terminated) {
     processInput();
     
-    gameState = getGameState();
-    mvprintw(0, 0, "gameState: %d", *gameState);
-    refresh();
+    // gameState = getGameState();
+    // mvprintw(0, 0, "gameState: %d", *gameState);
+    // refresh();
     if (*gameState > Started) {
       printField();
       GameInfo_t gameInfo = updateCurrentState();
@@ -35,12 +34,12 @@ int main() {
         if (*gameState > Idle) {
           printField();
         }
-        
+        napms(TICK);
         tick_count += TICK;
       }
       
     }
-    napms(TICK);
+    
   } 
   // while (*gameState != Terminated) {
   //   gameState = getGameState();
