@@ -206,6 +206,7 @@ GameInfo_t updateCurrentState() {
       break;
     case Paused:
       gameInfo->pause = !gameInfo->pause;
+      *gameState = Idle;
       break;
     case Spawning:
       if (initTetromino(generateRandomTetromino()) == HorizontalCollision) {

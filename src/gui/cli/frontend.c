@@ -64,6 +64,11 @@ void printNextTetromino() {
   }
 }
 
+void printPauseScreen() {
+  MVPRINTW(16, (FIELD_WIDTH) * 2 + FIELD_PADDING + 5, "Paused");
+  refresh();
+}
+
 void printSideBar() {
   GameInfo_t *GameState = getGameInfo();
   printRectangle(0, FIELD_N, FIELD_M + 2, FIELD_M + 16);

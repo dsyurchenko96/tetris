@@ -169,6 +169,7 @@ void printStartingScreen();
 void printField();
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x);
 void printSideBar();
+void printPauseScreen();
 void printNextTetromino();
 
 #endif
