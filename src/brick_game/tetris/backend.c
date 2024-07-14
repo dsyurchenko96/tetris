@@ -104,27 +104,27 @@ void processInput() {
 }
 
 void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
-  // GameInfo_t *gameInfo = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   Tetromino *tetromino = getTetromino();
   GameState *gameState = getGameState();
   // int collision;
   switch (action) {
     case Left:
-      if (*gameState >= Idle && !checkCollision(tetromino, -1, 0)) {
+      if (!gameInfo->pause && *gameState >= Idle && !checkCollision(tetromino, -1, 0)) {
         moveTetromino(tetromino, -1, 0);
         *gameState = Shifting;
       }
       
       break;
     case Right:
-      if (*gameState >= Idle && !checkCollision(tetromino, 1, 0)) {
+      if (!gameInfo->pause && *gameState >= Idle && !checkCollision(tetromino, 1, 0)) {
         moveTetromino(tetromino, 1, 0);
         *gameState = Shifting;
       }
       
       break;
     case Down:
-      if (*gameState >= Idle) {
+      if (!gameInfo->pause && *gameState >= Idle) {
         *gameState = checkFallingCollision(tetromino);
       }
       
@@ -154,7 +154,7 @@ void userInput(UserAction_t action, __attribute__((unused)) bool hold) {
       break;
     case Action:
       // rotateTetromino(tetromino);
-      if (*gameState >= Idle) {
+      if (!gameInfo->pause && *gameState >= Idle) {
         *gameState = Rotating;
       }
       break;

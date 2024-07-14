@@ -20,12 +20,14 @@ typedef enum {
   Started,
   Paused,
   Terminated,
+  Spawning,
+  Locking,
   Idle,
   Shifting,
   Rotating,
   Falling,
-  Locking,
-  Spawning
+  
+  
 } GameState;
 
 typedef enum {

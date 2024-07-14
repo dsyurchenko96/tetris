@@ -33,6 +33,7 @@ int main() {
       }
       
     }
+    
     napms(TICK);
   } 
   destroyGame();
