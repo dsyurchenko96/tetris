@@ -26,7 +26,7 @@ ifeq ($(UNAME), Linux)
  OPENER = xdg-open
 else ifeq ($(UNAME), Darwin)
 #  ifeq ($(shell uname -m), arm64)
-#   CC = gcc-13
+#   CC = gcc-14
 #  endif
  TEST_FLAGS = $(shell pkg-config --cflags --libs check)
  OPENER = open
@@ -50,7 +50,7 @@ $(BUILD_DIR)/%.gcov.o: $(BACKEND_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(GCOV_FLAGS) -o $@ $<
 
 $(TEST_OBJ): $(BUILD_DIR)/test_%.o: $(TEST_DIR)/test_%.c
-	$(CC) -c $(CFLAGS) -o $@ $< $(TEST_FLAGS)
+	$(CC) -c $(CFLAGS) -o $@ $< --coverage
 
 play: clean $(TARGET)
 	./$(BUILD_DIR)/$(TARGET)
@@ -64,7 +64,7 @@ test.a: $(TEST_OBJ)
 	ranlib $(BUILD_DIR)/test.a
 
 test_compile: clean covered test.a
-	$(CC) $(CFLAGS) $(GCOV_FLAGS) -c $(TEST_DIR)/test_suite.c -o $(BUILD_DIR)/test_suite.o $(TEST_FLAGS)
+	$(CC) $(CFLAGS) $(GCOV_FLAGS) -c $(TEST_DIR)/test_suite.c -o $(BUILD_DIR)/test_suite.o --coverage
 	$(CC) $(CFLAGS) $(GCOV_FLAGS) $(BUILD_DIR)/test_suite.o $(BUILD_DIR)/test.a $(TARGET).a -o $(BUILD_DIR)/test $(LDFLAGS) $(TEST_FLAGS)
 
 test: test_compile
@@ -72,7 +72,6 @@ test: test_compile
 
 gcov_report: test
 	lcov -t "$(TARGET)" -o $(BUILD_DIR)/$(TARGET).info -c -d .
-# lcov -r $(BUILD_DIR)/$(TARGET).info "*math.h" -o $(BUILD_DIR)/$(TARGET).info
 	genhtml -o $(BUILD_DIR)/gcov_report $(BUILD_DIR)/$(TARGET).info
 	$(OPENER) ./$(BUILD_DIR)/gcov_report/index.html
 
@@ -107,4 +106,4 @@ endif
 docker:
 	cd ../materials/build/Docker && bash run.sh
 
-.PHONY: all clean gcov_report style rebuild beforecommit test_leaks
+.PHONY: all clean test test_compile test_leaks gcov_report style debug docker rebuild beforecommit play covered

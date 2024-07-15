@@ -16,6 +16,8 @@
 #define INITIAL_SPEED 1000
 #define TICK 30
 
+#define HIGH_SCORE_FILE "highscore.txt"
+
 typedef enum {
   Started,
   Paused,
@@ -26,8 +28,7 @@ typedef enum {
   Shifting,
   Rotating,
   Falling,
-  
-  
+
 } GameState;
 
 typedef enum {
@@ -41,7 +42,7 @@ typedef enum {
   Action,
 } UserAction_t;
 
-typedef enum { O, I, S, Z, L, J, T, INIT } TetrominoType;
+typedef enum { O, I, S, Z, L, J, T } TetrominoType;
 
 typedef enum {
   Default,
@@ -141,19 +142,22 @@ GameState *getGameState();
 
 void initGame();
 void destroyGame();
-void processInput();
-int checkCollision(Tetromino *tetromino, int x, int y);
-GameState checkFallingCollision(Tetromino *tetromino);
+void processInput(int c);
+int checkCollision(const Tetromino *tetromino, int x, int y);
+GameState checkFallingCollision(const Tetromino *tetromino);
 
 TetrominoType generateRandomTetromino();
 int initTetromino(TetrominoType next_type);
 int spawnTetromino(Tetromino *tetromino);
-void clearTetromino(Tetromino *tetromino);
+void clearTetromino(const Tetromino *tetromino);
 void lockTetromino(Tetromino *tetromino);
 void moveTetromino(Tetromino *tetromino, int x, int y);
 void rotateTetromino(Tetromino *tetromino);
 void setGameInfoNextTetromino(Tetromino *tetromino);
 void clearGameInfoNextTetromino();
+
+int readHighScore(void);
+void writeHighScore(void);
 
 void setByte(int value, int index, int *num);
 int getByte(int index, int num);
@@ -167,11 +171,14 @@ void updateScoreLevel(LineClearInfo lines);
 void userInput(UserAction_t action, bool hold);
 
 void initCurses();
+void printFrontend();
 void printStartingScreen();
 void printField();
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x);
 void printSideBar();
 void printPauseScreen();
 void printNextTetromino();
+void printControls();
+void printCell(int row, int col, int row_shift, int col_shift, int state, int color);
 
 #endif

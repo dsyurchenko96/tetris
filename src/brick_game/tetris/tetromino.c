@@ -2,7 +2,7 @@
 
 #include "../../tetris.h"
 
-void clearTetromino(Tetromino *tetromino) {
+void clearTetromino(const Tetromino *tetromino) {
   GameInfo_t *gameInfo = getGameInfo();
   for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
     gameInfo->field
@@ -34,13 +34,13 @@ int initTetromino(TetrominoType next_type) {
   tetromino->previous_state = 0;
   tetromino->state = 0;
 
-  if (next_type == INIT) {
-    tetromino->type = generateRandomTetromino();
-    tetromino->next_type = generateRandomTetromino();
-  } else {
-    tetromino->type = tetromino->next_type;
-    tetromino->next_type = next_type;
-  }
+  // if (next_type == INIT) {
+  //   tetromino->type = generateRandomTetromino();
+  //   tetromino->next_type = generateRandomTetromino();
+  // } else {
+  tetromino->type = tetromino->next_type;
+  tetromino->next_type = next_type;
+  // }
   tetromino->color = TETROMINO_COLORS[tetromino->type + 1];
   tetromino->number_of_states = STATES_COUNT[tetromino->type];
 
@@ -70,7 +70,7 @@ void clearGameInfoNextTetromino() {
 }
 
 TetrominoType generateRandomTetromino() {
-  TetrominoType tetrominoArray[] = {O, I, S, Z, L, J, T};
+  const TetrominoType tetrominoArray[] = {O, I, S, Z, L, J, T};
   int index = (int)((double)random() / ((double)RAND_MAX + 1) * NUM_TETROMINOS);
   return tetrominoArray[index];
 }

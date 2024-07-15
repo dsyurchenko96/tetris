@@ -3,7 +3,12 @@
 
 #include <check.h>
 
-// Suite *spawn_suite();
 Suite *rotate_suite();
+Suite *input_suite();
+Suite *update_suite();
+Suite *clearLine_suite();
+
+void setup_tetromino();
+void teardown();
 
 #endif

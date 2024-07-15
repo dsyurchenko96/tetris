@@ -7,8 +7,10 @@
 
 int main(void) {
   int failed = 0;
-  Suite *tetris_test[] = {
-    rotate_suite(), NULL};
+  Suite *tetris_test[] = {input_suite(), rotate_suite(),
+  update_suite(),
+  clearLine_suite(),
+   NULL};
 
   for (int i = 0; tetris_test[i] != NULL; i++) {
     SRunner *sr = srunner_create(tetris_test[i]);
@@ -23,3 +25,13 @@ int main(void) {
 
   return failed == 0 ? 0 : 1;
 }
+
+void setup_tetromino(void) {
+  initGame();
+  Tetromino *tetromino = getTetromino();
+  tetromino->x = SPAWN_X;
+  tetromino->y = SPAWN_Y;
+  tetromino->state = 0;
+}
+
+void teardown(void) { destroyGame(); }

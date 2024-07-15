@@ -3,6 +3,15 @@
 #include <ncurses.h>
 #include <stdbool.h>
 
+void printFrontend() {
+  clear();
+  printField();
+  printSideBar();
+  printNextTetromino();
+  printControls();
+  refresh();
+}
+
 void printStartingScreen() {
   clear();
   printRectangle(0, FIELD_N, 0, FIELD_M);
@@ -13,53 +22,55 @@ void printStartingScreen() {
 }
 
 void printField() {
-  clear();
+  // clear();
   printRectangle(0, FIELD_N, 0, FIELD_M);
-  GameInfo_t *GameState = getGameInfo();
-  // Tetromino *tetromino = getTetromino();
+  const GameInfo_t *gameInfo = getGameInfo();
+
   for (int i = 0; i < FIELD_HEIGHT; i++) {
     for (int j = 0; j < FIELD_WIDTH; j++) {
-      int state = getByte(StateByte, GameState->field[i][j]);
-      int color = getByte(ColorByte, GameState->field[i][j]);
-      if (has_colors() == TRUE && state != Empty) {
-        attron(COLOR_PAIR(color));
-        MVADDCH(i + 1, j * 2 + 1, ' ' | A_REVERSE);
-        MVADDCH(i + 1, j * 2 + 2, ' ' | A_REVERSE);
-        attroff(COLOR_PAIR(color));
-      } else if (has_colors() == FALSE && state != Empty) {
-        MVADDCH(i + 1, j * 2 + 1, '[');
-        MVADDCH(i + 1, j * 2 + 2, ']');
-      } else {
-        MVADDCH(i + 1, j * 2 + 1, ' ');
-        MVADDCH(i + 1, j * 2 + 2, ' ');
-      }
+      int state = getByte(StateByte, gameInfo->field[i][j]);
+      int color = getByte(ColorByte, gameInfo->field[i][j]);
+      printCell(i, j, 1, 0, state, color);
     }
   }
-  printSideBar();
-  refresh();
+  // printSideBar();
+  // printControls();
+  // refresh();
+}
+
+void printControls() {
+  MVPRINTW(1, CONTROLS_X, "Controls:");
+  MVPRINTW(3, CONTROLS_X, "Left/Right - Move");
+  MVPRINTW(4, CONTROLS_X, "Down - Accelerate");
+  MVPRINTW(5, CONTROLS_X, "Space - Rotate");
+  MVPRINTW(6, CONTROLS_X, "p - Pause");
+  MVPRINTW(7, CONTROLS_X, "q - Quit");
+}
+
+void printCell(int row, int col, int row_shift, int col_shift, int state, int color) {
+  if (has_colors() == TRUE && state != Empty) {
+    attron(COLOR_PAIR(color));
+    MVADDCH(row + row_shift, col_shift + col * 2 + 1, ' ' | A_REVERSE);
+    MVADDCH(row + row_shift, col_shift + col * 2 + 2, ' ' | A_REVERSE);
+    attroff(COLOR_PAIR(color));
+  } else if (has_colors() == FALSE && state != Empty) {
+    MVADDCH(row + row_shift, col_shift + col * 2 + 1, '[');
+    MVADDCH(row + row_shift, col_shift + col * 2 + 2, ']');
+  } else {
+    MVADDCH(row + row_shift, col_shift + col * 2 + 1, ' ');
+    MVADDCH(row + row_shift, col_shift + col * 2 + 2, ' ');
+    
+  }
 }
 
 void printNextTetromino() {
-  GameInfo_t *GameState = getGameInfo();
+  const GameInfo_t *gameInfo = getGameInfo();
 
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      int state = getByte(StateByte, GameState->next[i][j]);
-      int color = getByte(ColorByte, GameState->next[i][j]);
-      if (has_colors() == TRUE && state != Empty) {
-        // MVPRINTW(i + 10, SIDEBAR_X + j, "1");
-        attron(COLOR_PAIR(color));
-        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 1, ' ' | A_REVERSE);
-        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 2, ' ' | A_REVERSE);
-        attroff(COLOR_PAIR(color));
-      } else if (has_colors() == FALSE && state != Empty) {
-        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 1, '[');
-        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 2, ']');
-      } else {
-        // MVPRINTW(i + 10, SIDEBAR_X + j, "0");
-        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 1, ' ');
-        MVADDCH(i + 10, SIDEBAR_X + j * 2 + 2, ' ');
-      }
+      int state = getByte(StateByte, gameInfo->next[i][j]);
+      int color = getByte(ColorByte, gameInfo->next[i][j]);
+      printCell(i, j, 10, SIDEBAR_X, state, color);
     }
   }
 }
@@ -70,22 +81,19 @@ void printPauseScreen() {
 }
 
 void printSideBar() {
-  GameInfo_t *GameState = getGameInfo();
+  GameInfo_t *gameInfo = getGameInfo();
   printRectangle(0, FIELD_N, FIELD_M + 2, FIELD_M + 16);
-  MVPRINTW(1, SIDEBAR_X, "Level: %d", GameState->level);
+  MVPRINTW(1, SIDEBAR_X, "Level: %d", gameInfo->level);
 
   MVPRINTW(3, SIDEBAR_X, "Score:");
-  MVPRINTW(4, SIDEBAR_X, "%6d", GameState->score);
+  MVPRINTW(4, SIDEBAR_X, "%6d", gameInfo->score);
 
   MVPRINTW(6, SIDEBAR_X, "High Score:");
-  MVPRINTW(7, SIDEBAR_X, "%6d", GameState->high_score);
+  MVPRINTW(7, SIDEBAR_X, "%6d", gameInfo->high_score);
 
   MVPRINTW(9, SIDEBAR_X, "Next:");
-  printNextTetromino();
+  // printNextTetromino();
 
-  // if (GameState->pause) {
-  //     MVPRINTW(9, (FIELD_WIDTH) * 2 + FIELD_PADDING + 5, "Paused");
-  // }
 }
 
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x) {
@@ -116,14 +124,8 @@ void initCurses() {
   keypad(stdscr, TRUE);
   nodelay(stdscr, TRUE);
   curs_set(FALSE);
-  // setlocale(LC_ALL, "");
   if (has_colors() == TRUE) {
     start_color();
-
-    // TetrominoColor TETROMINO_COLORS[NUM_TETROMINOS] = {Yellow, Cyan, Green,
-    // Red, Orange, Blue, Purple};
-    // orange = 9
-    // init_color(9, 255, 165, 0);
 
     init_pair(Yellow, COLOR_YELLOW, COLOR_BLACK);
     init_pair(Cyan, COLOR_CYAN, COLOR_BLACK);
@@ -137,5 +139,46 @@ void initCurses() {
     }
     init_pair(Blue, COLOR_BLUE, COLOR_BLACK);
     init_pair(Purple, COLOR_MAGENTA, COLOR_BLACK);
+  }
+}
+
+void processInput(int c) {
+  switch (c) {
+    case KEY_UP:
+      userInput(Up, false);
+      break;
+
+    case KEY_DOWN:
+      userInput(Down, false);
+      break;
+
+    case KEY_LEFT:
+      userInput(Left, false);
+      break;
+
+    case KEY_RIGHT:
+      userInput(Right, false);
+      break;
+
+    case '\n':
+      userInput(Start, false);
+      break;
+
+    case ' ':
+      userInput(Action, true);
+      break;
+
+    case 'p':
+    case 'P':
+      userInput(Pause, false);
+      break;
+
+    case 'q':
+    case 'Q':
+      userInput(Terminate, false);
+      break;
+
+    default:
+      break;
   }
 }
