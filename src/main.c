@@ -1,34 +1,25 @@
 #include <ncurses.h>
 
-#include "tetris.h"
+#include "inc/backend.h"
+#include "inc/frontend.h"
+#include "inc/states.h"
+#include "inc/tetris.h"
 
 int main() {
   initCurses();
   initGame();
   getGameInfo()->high_score = readHighScore();
   printStartingScreen();
-
-  int tick_count = 0;
   GameState *gameState = getGameState();
   while (*gameState != Terminated) {
     int input = getch();
     processInput(input);
 
     if (*gameState > Started) {
-      printFrontend();
       GameInfo_t gameInfo = updateCurrentState();
+      printFrontend(gameInfo);
       if (!gameInfo.pause) {
-        gameInfo.speed = INITIAL_SPEED / gameInfo.level;
-        if (tick_count >= gameInfo.speed) {
-          if (*gameState != Spawning) {
-            const Tetromino *tetromino = getTetromino();
-            *gameState = checkFallingCollision(tetromino);
-          }
-
-          tick_count = 0;
-        }
-
-        tick_count += TICK;
+        updateFallTimer();
       } else {
         printPauseScreen();
       }

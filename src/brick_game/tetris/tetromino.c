@@ -1,6 +1,9 @@
+#include "../../inc/tetromino.h"
+
 #include <stdlib.h>
 
-#include "../../tetris.h"
+#include "../../inc/backend.h"
+#include "../../inc/tetris.h"
 
 void clearTetromino(const Tetromino *tetromino) {
   GameInfo_t *gameInfo = getGameInfo();
@@ -34,13 +37,9 @@ int initTetromino(TetrominoType next_type) {
   tetromino->previous_state = 0;
   tetromino->state = 0;
 
-  // if (next_type == INIT) {
-  //   tetromino->type = generateRandomTetromino();
-  //   tetromino->next_type = generateRandomTetromino();
-  // } else {
   tetromino->type = tetromino->next_type;
   tetromino->next_type = next_type;
-  // }
+
   tetromino->color = TETROMINO_COLORS[tetromino->type + 1];
   tetromino->number_of_states = STATES_COUNT[tetromino->type];
 
@@ -54,8 +53,7 @@ void setGameInfoNextTetromino(Tetromino *tetromino) {
   for (int coordinate = 0; coordinate < NUM_BLOCKS; coordinate++) {
     setCellInfo(
         &gameInfo->next[COORDINATES[tetromino->next_type][0][coordinate].y + 2]
-                       [COORDINATES[tetromino->next_type][0][coordinate].x] +
-            2,
+                       [COORDINATES[tetromino->next_type][0][coordinate].x + 2],
         Locked, TETROMINO_COLORS[tetromino->next_type + 1]);
   }
 }
@@ -112,20 +110,6 @@ void moveTetromino(Tetromino *tetromino, int x, int y) {
 }
 
 void rotateTetromino(Tetromino *tetromino) {
-  // int og_state = tetromino->state;
-  // int collision = HorizontalCollision;
-  // for (int i = 0; collision != NoCollision && i < tetromino->number_of_states
-  // + 1; i++) {
-  //   tetromino->previous_state = tetromino->state;
-  //   tetromino->state = (tetromino->state + i + 1) %
-  //   tetromino->number_of_states; collision = checkCollision(tetromino, 0, 0);
-  // }
-
-  // if (collision == NoCollision) {
-  //   moveTetromino(tetromino, 0, 0);
-  //   tetromino->previous_state = tetromino->state;
-  // }
-
   tetromino->previous_state = tetromino->state;
   tetromino->state = (tetromino->state + 1) % tetromino->number_of_states;
   if (checkCollision(tetromino, 0, 0) != NoCollision) {
@@ -136,11 +120,39 @@ void rotateTetromino(Tetromino *tetromino) {
   }
 }
 
-void setByte(int value, int index, int *num) { *num |= value << (index * 8); }
+int checkCollision(const Tetromino *tetromino, int x, int y) {
+  const GameInfo_t *gameInfo = getGameInfo();
+  int collision = NoCollision;
+  for (int coordinate = 0; collision == NoCollision && coordinate < NUM_BLOCKS;
+       coordinate++) {
+    int next_x = tetromino->x + x +
+                 COORDINATES[tetromino->type][tetromino->state][coordinate].x;
+    int next_y = tetromino->y + y +
+                 COORDINATES[tetromino->type][tetromino->state][coordinate].y;
 
-int getByte(int index, int num) { return (num >> (index * 8)) & 0xFF; }
+    if (next_x < 0 || next_x >= FIELD_WIDTH || next_y < 0 ||
+        (!x && !y && (next_y >= FIELD_HEIGHT)) ||
+        (!y && getByte(StateByte, gameInfo->field[next_y][next_x]) == Locked)) {
+      // gameInfo->field[next_y][next_x] == Locked
+      collision = HorizontalCollision;
 
-void setCellInfo(int *cell, int state, int color) {
-  setByte(state, StateByte, cell);
-  setByte(color, ColorByte, cell);
+    } else if ((y && next_y >= FIELD_HEIGHT) ||
+               (!x && y &&
+                getByte(StateByte, gameInfo->field[next_y][next_x]) ==
+                    Locked)) {
+      // gameInfo->field[next_y][next_x] == Locked
+      collision = LockingCollision;
+    }
+  }
+
+  return collision;
+}
+
+GameState checkFallingCollision(const Tetromino *tetromino) {
+  GameState gameState = Falling;
+  int collision = checkCollision(tetromino, 0, 1);
+  if (collision == LockingCollision) {
+    gameState = Locking;
+  }
+  return gameState;
 }

@@ -7,6 +7,10 @@ BACKEND_DIR = brick_game/tetris
 FRONTEND_DIR = gui/cli
 TEST_DIR = tests
 BUILD_DIR = build
+DOXYGEN_DIR = doxygen_output
+HEADER_DIR = inc
+
+INSTALLED_FILE = game
 
 SRC = $(wildcard $(BACKEND_DIR)/*.c)
 OBJ = $(SRC:$(BACKEND_DIR)/%.c=$(BUILD_DIR)/%.o)
@@ -76,10 +80,22 @@ gcov_report: test
 	$(OPENER) ./$(BUILD_DIR)/gcov_report/index.html
 
 style:
-	clang-format -i -style=file:"../materials/linters/.clang-format" $(BACKEND_DIR)/*.c $(FRONTEND_DIR)/*.c $(FRONTEND_DIR)/*.h $(TEST_DIR)/*.c $(TEST_DIR)/*.h *.c *.h
+	clang-format -i -style=file:"../materials/linters/.clang-format" $(BACKEND_DIR)/*.c $(FRONTEND_DIR)/*.c $(TEST_DIR)/*.c $(TEST_DIR)/*.h *.c $(HEADER_DIR)/*.h
 
 clean:
-	rm -rf $(BUILD_DIR)/* $(TARGET).a
+	rm -rf $(BUILD_DIR)/* $(TARGET).a $(TARGET) $(DOXYGEN_DIR)/ $(INSTALLED_FILE)
+
+install: all
+	install $(BUILD_DIR)/$(TARGET) $(INSTALLED_FILE)
+
+uninstall:
+	rm $(INSTALLED_FILE)
+
+
+dvi:
+	doxygen Doxyfile
+	$(OPENER) $(DOXYGEN_DIR)/html/index.html
+	make -C $(DOXYGEN_DIR)/latex
 
 rebuild:
 	make clean

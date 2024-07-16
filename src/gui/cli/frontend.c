@@ -1,13 +1,16 @@
-#include "frontend.h"
+#include "../../inc/frontend.h"
 
 #include <ncurses.h>
 #include <stdbool.h>
 
-void printFrontend() {
+#include "../../inc/backend.h"
+#include "../../inc/states.h"
+
+void printFrontend(const GameInfo_t gameInfo) {
   clear();
-  printField();
-  printSideBar();
-  printNextTetromino();
+  printField(gameInfo);
+  printSideBar(gameInfo);
+  printNextTetromino(gameInfo);
   printControls();
   refresh();
 }
@@ -21,30 +24,26 @@ void printStartingScreen() {
   refresh();
 }
 
-void printField() {
-  // clear();
+void printField(const GameInfo_t gameInfo) {
   printRectangle(0, FIELD_N, 0, FIELD_M);
-  const GameInfo_t *gameInfo = getGameInfo();
 
   for (int i = 0; i < FIELD_HEIGHT; i++) {
     for (int j = 0; j < FIELD_WIDTH; j++) {
-      int state = getByte(StateByte, gameInfo->field[i][j]);
-      int color = getByte(ColorByte, gameInfo->field[i][j]);
+      int state = getByte(StateByte, gameInfo.field[i][j]);
+      int color = getByte(ColorByte, gameInfo.field[i][j]);
       printCell(i, j, 1, 0, state, color);
     }
   }
-  // printSideBar();
-  // printControls();
-  // refresh();
 }
 
-void printControls() {
-  MVPRINTW(1, CONTROLS_X, "Controls:");
-  MVPRINTW(3, CONTROLS_X, "Left/Right - Move");
-  MVPRINTW(4, CONTROLS_X, "Down - Accelerate");
-  MVPRINTW(5, CONTROLS_X, "Space - Rotate");
-  MVPRINTW(6, CONTROLS_X, "p - Pause");
-  MVPRINTW(7, CONTROLS_X, "q - Quit");
+void printNextTetromino(const GameInfo_t gameInfo) {
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      int state = getByte(StateByte, gameInfo.next[i][j]);
+      int color = getByte(ColorByte, gameInfo.next[i][j]);
+      printCell(i, j, 10, SIDEBAR_X, state, color);
+    }
+  }
 }
 
 void printCell(int row, int col, int row_shift, int col_shift, int state,
@@ -63,16 +62,13 @@ void printCell(int row, int col, int row_shift, int col_shift, int state,
   }
 }
 
-void printNextTetromino() {
-  const GameInfo_t *gameInfo = getGameInfo();
-
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      int state = getByte(StateByte, gameInfo->next[i][j]);
-      int color = getByte(ColorByte, gameInfo->next[i][j]);
-      printCell(i, j, 10, SIDEBAR_X, state, color);
-    }
-  }
+void printControls() {
+  MVPRINTW(1, CONTROLS_X, "Controls:");
+  MVPRINTW(3, CONTROLS_X, "Left/Right - Move");
+  MVPRINTW(4, CONTROLS_X, "Down - Accelerate");
+  MVPRINTW(5, CONTROLS_X, "Space - Rotate");
+  MVPRINTW(6, CONTROLS_X, "p - Pause");
+  MVPRINTW(7, CONTROLS_X, "q - Quit");
 }
 
 void printPauseScreen() {
@@ -80,19 +76,17 @@ void printPauseScreen() {
   refresh();
 }
 
-void printSideBar() {
-  GameInfo_t *gameInfo = getGameInfo();
+void printSideBar(const GameInfo_t gameInfo) {
   printRectangle(0, FIELD_N, FIELD_M + 2, FIELD_M + 16);
-  MVPRINTW(1, SIDEBAR_X, "Level: %d", gameInfo->level);
+  MVPRINTW(1, SIDEBAR_X, "Level: %d", gameInfo.level);
 
   MVPRINTW(3, SIDEBAR_X, "Score:");
-  MVPRINTW(4, SIDEBAR_X, "%6d", gameInfo->score);
+  MVPRINTW(4, SIDEBAR_X, "%6d", gameInfo.score);
 
   MVPRINTW(6, SIDEBAR_X, "High Score:");
-  MVPRINTW(7, SIDEBAR_X, "%6d", gameInfo->high_score);
+  MVPRINTW(7, SIDEBAR_X, "%6d", gameInfo.high_score);
 
   MVPRINTW(9, SIDEBAR_X, "Next:");
-  // printNextTetromino();
 }
 
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x) {

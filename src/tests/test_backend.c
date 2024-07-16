@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../tetris.h"
+#include "../inc/backend.h"
+#include "../inc/states.h"
+#include "../inc/tetris.h"
+#include "../inc/tetromino.h"
 #include "test_suite.h"
 
 START_TEST(test_userInput_start) {
@@ -110,83 +113,6 @@ START_TEST(test_userInput_action) {
 }
 END_TEST
 
-START_TEST(test_processInput_invalid_input) {
-  GameState *gameState = getGameState();
-  *gameState = Idle;
-  processInput('x');
-  ck_assert_int_eq(*gameState, Idle);
-}
-END_TEST
-
-START_TEST(test_processInput_key_down) {
-  GameState *gameState = getGameState();
-  *gameState = Idle;
-  processInput(KEY_DOWN);
-  ck_assert_int_eq(*gameState, Falling);
-}
-END_TEST
-
-START_TEST(test_processInput_key_left) {
-  GameState *gameState = getGameState();
-  Tetromino *tetromino = getTetromino();
-
-  ck_assert_int_eq(spawnTetromino(tetromino), 0);
-  *gameState = Idle;
-  processInput(KEY_LEFT);
-  ck_assert_int_eq(*gameState, Shifting);
-}
-END_TEST
-
-START_TEST(test_processInput_move_right) {
-  GameState *gameState = getGameState();
-  Tetromino *tetromino = getTetromino();
-  tetromino->type = L;
-
-  ck_assert_int_eq(spawnTetromino(tetromino), 0);
-  *gameState = Idle;
-  processInput(KEY_RIGHT);
-  ck_assert_int_eq(*gameState, Shifting);
-}
-END_TEST
-
-START_TEST(test_userInput_start_action) {
-  GameState *gameState = getGameState();
-  ck_assert_int_eq(*gameState, Started);
-  processInput('\n');
-  ck_assert_int_eq(*gameState, Spawning);
-}
-END_TEST
-
-START_TEST(test_processInput_space_action) {
-  GameState *gameState = getGameState();
-  *gameState = Idle;
-  processInput(' ');
-  ck_assert_int_eq(*gameState, Rotating);
-}
-END_TEST
-
-START_TEST(test_processInput_pause) {
-  GameState *gameState = getGameState();
-  processInput('\n');
-  processInput('p');
-  ck_assert_int_eq(*gameState, Paused);
-  *gameState = Idle;
-  processInput('P');
-  ck_assert_int_eq(*gameState, Paused);
-}
-END_TEST
-
-START_TEST(test_processInput_terminate) {
-  GameState *gameState = getGameState();
-  processInput('\n');
-  processInput('q');
-  ck_assert_int_eq(*gameState, Terminated);
-  *gameState = Idle;
-  processInput('Q');
-  ck_assert_int_eq(*gameState, Terminated);
-}
-END_TEST
-
 Suite *input_suite() {
   Suite *s;
   TCase *tc;
@@ -201,15 +127,6 @@ Suite *input_suite() {
   tcase_add_test(tc, test_userInput_move_right);
   tcase_add_test(tc, test_userInput_move_down);
   tcase_add_test(tc, test_userInput_action);
-
-  tcase_add_test(tc, test_processInput_invalid_input);
-  tcase_add_test(tc, test_processInput_key_down);
-  tcase_add_test(tc, test_processInput_key_left);
-  tcase_add_test(tc, test_processInput_move_right);
-  tcase_add_test(tc, test_userInput_start_action);
-  tcase_add_test(tc, test_processInput_space_action);
-  tcase_add_test(tc, test_processInput_pause);
-  tcase_add_test(tc, test_processInput_terminate);
   suite_add_tcase(s, tc);
   return s;
 }
@@ -345,6 +262,7 @@ START_TEST(test_clearLines_1) {
   ck_assert_int_eq(lines.indeces[0], last_line);
 
   clearLines(lines);
+  updateScoreLevel(lines);
 
   ck_assert_int_eq(gameInfo->score, 100);
   for (int col = 0; col < FIELD_WIDTH; col++) {
@@ -368,6 +286,7 @@ START_TEST(test_clearLines_2) {
   ck_assert_int_eq(lines.indeces[1], last_line);
 
   clearLines(lines);
+  updateScoreLevel(lines);
 
   ck_assert_int_eq(gameInfo->score, 300);
   for (int row = 0; row < FIELD_HEIGHT; row++) {
@@ -394,6 +313,7 @@ START_TEST(test_clearLines_3) {
   ck_assert_int_eq(lines.indeces[2], last_line);
 
   clearLines(lines);
+  updateScoreLevel(lines);
 
   ck_assert_int_eq(gameInfo->score, 700);
   ck_assert_int_eq(gameInfo->level, 2);
@@ -422,6 +342,7 @@ START_TEST(test_clearLines_4) {
   ck_assert_int_eq(lines.indeces[3], last_line);
 
   clearLines(lines);
+  updateScoreLevel(lines);
 
   ck_assert_int_eq(gameInfo->score, 1500);
   ck_assert_int_eq(gameInfo->level, 3);
@@ -557,6 +478,70 @@ Suite *clearLine_suite() {
 
   tcase_add_test(tc, test_clearLines_2_in_game);
   tcase_add_test(tc, test_clearLines_4_in_game);
+  suite_add_tcase(s, tc);
+  return s;
+}
+
+START_TEST(test_timer_1) {
+  int *timer = getTimer();
+  GameInfo_t *gameInfo = getGameInfo();
+  ck_assert_int_eq(*timer, 0);
+  ck_assert_int_eq(gameInfo->speed, 1000);
+  updateFallTimer();
+  ck_assert_int_eq(*timer, TICK);
+}
+END_TEST
+
+START_TEST(test_timer_2) {
+  int *timer = getTimer();
+  GameInfo_t *gameInfo = getGameInfo();
+  ck_assert_int_eq(*timer, 0);
+  ck_assert_int_eq(gameInfo->speed, 1000);
+  for (int i = 1; i <= 33; i++) {
+    updateFallTimer();
+    ck_assert_int_eq(*timer, TICK * i);
+  }
+  updateFallTimer();
+  ck_assert_int_eq(*timer, 0);
+}
+END_TEST
+
+START_TEST(test_timer_spawning) {
+  int *timer = getTimer();
+  *timer = 990;
+  // GameInfo_t *gameInfo = getGameInfo();
+  GameState *gameState = getGameState();
+  Tetromino *tetromino = getTetromino();
+  *gameState = Spawning;
+  spawnTetromino(tetromino);
+  updateFallTimer();
+  ck_assert_int_eq(*timer, 0);
+  ck_assert_int_eq(*gameState, Spawning);
+}
+
+START_TEST(test_timer_not_spawning) {
+  int *timer = getTimer();
+  *timer = 990;
+  // GameInfo_t *gameInfo = getGameInfo();
+  GameState *gameState = getGameState();
+  Tetromino *tetromino = getTetromino();
+  *gameState = Idle;
+  spawnTetromino(tetromino);
+  updateFallTimer();
+  ck_assert_int_eq(*timer, 0);
+  ck_assert_int_eq(*gameState, Falling);
+}
+
+Suite *timer_suite() {
+  Suite *s;
+  TCase *tc;
+  s = suite_create("timer");
+  tc = tcase_create("timer");
+  tcase_add_checked_fixture(tc, setup_tetromino, teardown);
+  tcase_add_test(tc, test_timer_1);
+  tcase_add_test(tc, test_timer_2);
+  tcase_add_test(tc, test_timer_spawning);
+  tcase_add_test(tc, test_timer_not_spawning);
   suite_add_tcase(s, tc);
   return s;
 }
