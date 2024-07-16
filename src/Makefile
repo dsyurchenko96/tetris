@@ -11,6 +11,7 @@ DOXYGEN_DIR = doxygen_output
 HEADER_DIR = inc
 
 INSTALLED_FILE = game
+ARCHIVE_DIR = archive
 
 SRC = $(wildcard $(BACKEND_DIR)/*.c)
 OBJ = $(SRC:$(BACKEND_DIR)/%.c=$(BUILD_DIR)/%.o)
@@ -83,7 +84,7 @@ style:
 	clang-format -i -style=file:"../materials/linters/.clang-format" $(BACKEND_DIR)/*.c $(FRONTEND_DIR)/*.c $(TEST_DIR)/*.c $(TEST_DIR)/*.h *.c $(HEADER_DIR)/*.h
 
 clean:
-	rm -rf $(BUILD_DIR)/* $(TARGET).a $(TARGET) $(DOXYGEN_DIR)/ $(INSTALLED_FILE)
+	rm -rf $(BUILD_DIR)/* $(TARGET).a $(TARGET) $(DOXYGEN_DIR)/ $(INSTALLED_FILE) $(INSTALLED_FILE).tar.gz $(ARCHIVE_DIR)
 
 install: all
 	install $(BUILD_DIR)/$(TARGET) $(INSTALLED_FILE)
@@ -91,6 +92,12 @@ install: all
 uninstall:
 	rm $(INSTALLED_FILE)
 
+dist: clean
+	mkdir -p $(ARCHIVE_DIR)
+	tar -cvzf $(ARCHIVE_DIR)/$(INSTALLED_FILE).tar.gz *
+
+untar: dist
+	cd $(ARCHIVE_DIR) && tar xvf $(INSTALLED_FILE).tar.gz
 
 dvi:
 	doxygen Doxyfile
