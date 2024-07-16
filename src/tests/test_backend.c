@@ -107,9 +107,8 @@ START_TEST(test_userInput_action) {
   *gameState = Idle;
   userInput(Action, true);
   ck_assert_int_eq(*gameState, Rotating);
-} END_TEST
-
-
+}
+END_TEST
 
 START_TEST(test_processInput_invalid_input) {
   GameState *gameState = getGameState();
@@ -226,8 +225,8 @@ START_TEST(test_updateCurrentState_falling) {
   updateCurrentState();
   ck_assert_int_eq(tetromino->y, SPAWN_Y + 1);
   ck_assert_int_eq(*gameState, Idle);
-
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_updateCurrentState_rotating) {
   GameState *gameState = getGameState();
@@ -241,8 +240,8 @@ START_TEST(test_updateCurrentState_rotating) {
   updateCurrentState();
   ck_assert_int_eq(tetromino->state, 1);
   ck_assert_int_eq(*gameState, Idle);
-
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_updateCurrentState_paused) {
   GameState *gameState = getGameState();
@@ -252,15 +251,16 @@ START_TEST(test_updateCurrentState_paused) {
   updateCurrentState();
   ck_assert_int_eq(gameInfo->pause, 1);
   ck_assert_int_eq(*gameState, Idle);
-
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_updateCurrentState_spawning_no_collision) {
   GameState *gameState = getGameState();
   *gameState = Spawning;
   updateCurrentState();
   ck_assert_int_eq(*gameState, Idle);
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_updateCurrentState_spawning_collision) {
   GameState *gameState = getGameState();
@@ -275,7 +275,8 @@ START_TEST(test_updateCurrentState_spawning_collision) {
   *gameState = Spawning;
   updateCurrentState();
   ck_assert_int_eq(*gameState, Terminated);
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_updateCurrentState_locking) {
   GameState *gameState = getGameState();
@@ -295,21 +296,26 @@ START_TEST(test_updateCurrentState_locking) {
   gameInfo->field[last_line][9] = Locked;
 
   spawnTetromino(tetromino);
-  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X - 2]), Moving);
-  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X - 1]), Moving);
-  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X]), Moving);
-  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X + 1]), Moving);
+  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X - 2]),
+                   Moving);
+  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X - 1]),
+                   Moving);
+  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X]),
+                   Moving);
+  ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][SPAWN_X + 1]),
+                   Moving);
 
   *gameState = Locking;
   updateCurrentState();
 
   for (int col = 0; col < FIELD_WIDTH; col++) {
-    ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][col]), Empty);
+    ck_assert_int_eq(getByte(StateByte, gameInfo->field[last_line][col]),
+                     Empty);
   }
 
   ck_assert_int_eq(*gameState, Spawning);
-
-} END_TEST
+}
+END_TEST
 
 Suite *update_suite() {
   Suite *s;
@@ -337,14 +343,15 @@ START_TEST(test_clearLines_1) {
   LineClearInfo lines = checkLineClear();
   ck_assert_int_eq(lines.num_cleared, 1);
   ck_assert_int_eq(lines.indeces[0], last_line);
-  
+
   clearLines(lines);
 
   ck_assert_int_eq(gameInfo->score, 100);
   for (int col = 0; col < FIELD_WIDTH; col++) {
     ck_assert_int_eq(gameInfo->field[last_line][col], Empty);
   }
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_clearLines_2) {
   GameInfo_t *gameInfo = getGameInfo();
@@ -359,7 +366,7 @@ START_TEST(test_clearLines_2) {
   ck_assert_int_eq(lines.num_cleared, 2);
   ck_assert_int_eq(lines.indeces[0], last_line - 1);
   ck_assert_int_eq(lines.indeces[1], last_line);
-  
+
   clearLines(lines);
 
   ck_assert_int_eq(gameInfo->score, 300);
@@ -368,7 +375,8 @@ START_TEST(test_clearLines_2) {
       ck_assert_int_eq(gameInfo->field[row][col], Empty);
     }
   }
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_clearLines_3) {
   GameInfo_t *gameInfo = getGameInfo();
@@ -384,7 +392,7 @@ START_TEST(test_clearLines_3) {
   ck_assert_int_eq(lines.indeces[0], last_line - 2);
   ck_assert_int_eq(lines.indeces[1], last_line - 1);
   ck_assert_int_eq(lines.indeces[2], last_line);
-  
+
   clearLines(lines);
 
   ck_assert_int_eq(gameInfo->score, 700);
@@ -394,7 +402,8 @@ START_TEST(test_clearLines_3) {
       ck_assert_int_eq(gameInfo->field[row][col], Empty);
     }
   }
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_clearLines_4) {
   GameInfo_t *gameInfo = getGameInfo();
@@ -411,7 +420,7 @@ START_TEST(test_clearLines_4) {
   ck_assert_int_eq(lines.indeces[1], last_line - 2);
   ck_assert_int_eq(lines.indeces[2], last_line - 1);
   ck_assert_int_eq(lines.indeces[3], last_line);
-  
+
   clearLines(lines);
 
   ck_assert_int_eq(gameInfo->score, 1500);
@@ -421,13 +430,13 @@ START_TEST(test_clearLines_4) {
       ck_assert_int_eq(gameInfo->field[row][col], Empty);
     }
   }
-
-} END_TEST
+}
+END_TEST
 
 START_TEST(test_clearLines_2_in_game) {
   GameInfo_t *gameInfo = getGameInfo();
-  
-  int x_hole = 5; 
+
+  int x_hole = 5;
   int last_line = 19;
   for (int row = last_line - 1; row < FIELD_HEIGHT; row++) {
     for (int col = 0; col < FIELD_WIDTH; col++) {
@@ -457,13 +466,13 @@ START_TEST(test_clearLines_2_in_game) {
     updateCurrentState();
     ck_assert_int_eq(*gameState, Idle);
   }
-  
+
   userInput(Down, false);
   ck_assert_int_eq(*gameState, Locking);
   updateCurrentState();
   ck_assert_int_eq(*gameState, Spawning);
 
-   for (int row = last_line - 1; row < FIELD_HEIGHT; row++) {
+  for (int row = last_line - 1; row < FIELD_HEIGHT; row++) {
     for (int col = 0; col < FIELD_WIDTH; col++) {
       if (col != x_hole) {
         ck_assert_int_eq(getByte(StateByte, gameInfo->field[row][col]), Empty);
@@ -484,7 +493,7 @@ START_TEST(test_clearLines_2_in_game) {
 START_TEST(test_clearLines_4_in_game) {
   GameInfo_t *gameInfo = getGameInfo();
   int last_line = 19;
-  int x_hole = 5; 
+  int x_hole = 5;
 
   for (int row = last_line - 3; row < FIELD_HEIGHT; row++) {
     for (int col = 0; col < FIELD_WIDTH; col++) {
@@ -504,12 +513,10 @@ START_TEST(test_clearLines_4_in_game) {
   *gameState = Idle;
   spawnTetromino(tetromino);
 
-  
   userInput(Action, false);
   ck_assert_int_eq(*gameState, Rotating);
   updateCurrentState();
   ck_assert_int_eq(*gameState, Idle);
-  
 
   for (int i = 0; i < 4; i++) {
     userInput(Down, false);
@@ -522,7 +529,6 @@ START_TEST(test_clearLines_4_in_game) {
   updateCurrentState();
   ck_assert_int_eq(*gameState, Spawning);
   updateCurrentState();
-
 
   // for (int i = 0; i < FIELD_HEIGHT; i++) {
   //   for (int j = 0; j < FIELD_WIDTH; j++) {

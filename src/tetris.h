@@ -179,6 +179,7 @@ void printSideBar();
 void printPauseScreen();
 void printNextTetromino();
 void printControls();
-void printCell(int row, int col, int row_shift, int col_shift, int state, int color);
+void printCell(int row, int col, int row_shift, int col_shift, int state,
+               int color);
 
 #endif

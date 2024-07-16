@@ -20,13 +20,13 @@ int main() {
       if (!gameInfo.pause) {
         gameInfo.speed = INITIAL_SPEED / gameInfo.level;
         if (tick_count >= gameInfo.speed) {
-          const Tetromino *tetromino = getTetromino();
-          *gameState = checkFallingCollision(tetromino);
+          if (*gameState != Spawning) {
+            const Tetromino *tetromino = getTetromino();
+            *gameState = checkFallingCollision(tetromino);
+          }
+
           tick_count = 0;
         }
-        // if (*gameState > Idle) {
-        //   printField();
-        // }
 
         tick_count += TICK;
       } else {

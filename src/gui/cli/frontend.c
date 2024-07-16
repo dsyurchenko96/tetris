@@ -47,7 +47,8 @@ void printControls() {
   MVPRINTW(7, CONTROLS_X, "q - Quit");
 }
 
-void printCell(int row, int col, int row_shift, int col_shift, int state, int color) {
+void printCell(int row, int col, int row_shift, int col_shift, int state,
+               int color) {
   if (has_colors() == TRUE && state != Empty) {
     attron(COLOR_PAIR(color));
     MVADDCH(row + row_shift, col_shift + col * 2 + 1, ' ' | A_REVERSE);
@@ -59,7 +60,6 @@ void printCell(int row, int col, int row_shift, int col_shift, int state, int co
   } else {
     MVADDCH(row + row_shift, col_shift + col * 2 + 1, ' ');
     MVADDCH(row + row_shift, col_shift + col * 2 + 2, ' ');
-    
   }
 }
 
@@ -93,7 +93,6 @@ void printSideBar() {
 
   MVPRINTW(9, SIDEBAR_X, "Next:");
   // printNextTetromino();
-
 }
 
 void printRectangle(int top_y, int bottom_y, int left_x, int right_x) {

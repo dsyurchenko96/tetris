@@ -43,6 +43,17 @@ void initGame() {
     gameInfo->field[i] = calloc(FIELD_WIDTH, sizeof(int));
   }
 
+  // // DEBUGGING
+  // int x_hole = FIELD_WIDTH / 2 - 2;
+  // int last_line = FIELD_HEIGHT - 3;
+  // for (int row = last_line - 1; row < FIELD_HEIGHT; row++) {
+  //   for (int col = 0; col < FIELD_WIDTH; col++) {
+  //     if (col != x_hole) {
+  //       gameInfo->field[row][col] = Locked;
+  //     }
+  //   }
+  // }
+
   gameInfo->next = calloc(NUM_BLOCKS, sizeof(int *));
   for (int i = 0; i < NUM_BLOCKS; i++) {
     gameInfo->next[i] = calloc(NUM_BLOCKS, sizeof(int));
