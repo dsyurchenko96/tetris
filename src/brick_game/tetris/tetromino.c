@@ -133,14 +133,12 @@ int checkCollision(const Tetromino *tetromino, int x, int y) {
     if (next_x < 0 || next_x >= FIELD_WIDTH || next_y < 0 ||
         (!x && !y && (next_y >= FIELD_HEIGHT)) ||
         (!y && getByte(StateByte, gameInfo->field[next_y][next_x]) == Locked)) {
-      // gameInfo->field[next_y][next_x] == Locked
       collision = HorizontalCollision;
 
     } else if ((y && next_y >= FIELD_HEIGHT) ||
                (!x && y &&
                 getByte(StateByte, gameInfo->field[next_y][next_x]) ==
                     Locked)) {
-      // gameInfo->field[next_y][next_x] == Locked
       collision = LockingCollision;
     }
   }

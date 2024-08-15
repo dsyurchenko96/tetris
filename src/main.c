@@ -10,7 +10,7 @@ int main() {
   initGame();
   getGameInfo()->high_score = readHighScore();
   printStartingScreen();
-  GameState *gameState = getGameState();
+  const GameState *gameState = getGameState();
   while (*gameState != Terminated) {
     int input = getch();
     processInput(input);

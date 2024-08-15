@@ -97,7 +97,7 @@ GameInfo_t updateCurrentState() {
 void updateFallTimer() {
   int *timer = getTimer();
   (*timer) += TICK;
-  GameInfo_t *gameInfo = getGameInfo();
+  const GameInfo_t *gameInfo = getGameInfo();
   if (*timer >= gameInfo->speed) {
     GameState *gameState = getGameState();
     if (*gameState != Spawning) {
